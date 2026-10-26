@@ -202,12 +202,13 @@ export async function getChats() {
 // Admin Auth
 // ════════════════════════════════════════════════════════════
 
-/** Verifies admin credentials against the server. Returns true/false. */
+/** Login — credentials are verified server-side; JWT stored in httpOnly cookie. */
 export async function verifyAdmin(username, password) {
   try {
     await apiFetch('/api/admin/login', {
-      method: 'POST',
-      body:   JSON.stringify({ username, password }),
+      method:      'POST',
+      credentials: 'include',
+      body:        JSON.stringify({ username, password }),
     });
     return true;
   } catch {
@@ -215,14 +216,31 @@ export async function verifyAdmin(username, password) {
   }
 }
 
+/** Check whether the admin JWT cookie is still valid. */
+export async function checkAdminSession() {
+  try {
+    const res = await fetch('/api/admin/session', { credentials: 'include' });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Logout — clears the httpOnly JWT cookie on the server. */
+export async function adminLogout() {
+  try {
+    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
+  } catch { /* ignore */ }
+}
+
 // ════════════════════════════════════════════════════════════
 // Reset (Admin utility)
 // ════════════════════════════════════════════════════════════
 
-/** Wipes all DB data. Requires admin password for safety. */
-export async function resetDatabase(password) {
+/** Wipes all DB data — requires active admin session cookie. */
+export async function resetDatabase() {
   return apiFetch('/api/admin/reset', {
-    method: 'POST',
-    body:   JSON.stringify({ password }),
+    method:      'POST',
+    credentials: 'include',
   });
 }

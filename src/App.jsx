@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useHashRoute, navigateTo } from './Router';
-import { initDB, verifyAdmin } from './db';
+import { initDB, verifyAdmin, checkAdminSession, adminLogout } from './db';
 import Header from './components/customer/Header';
 import ChatWidget from './components/customer/ChatWidget';
 import HomeView from './components/customer/HomeView';
@@ -29,10 +29,19 @@ function App() {
     }
   });
 
-  // Admin Authentication State
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
-    return sessionStorage.getItem('dainty_admin_auth') === 'true';
-  });
+  // Admin Authentication State — driven by httpOnly JWT cookie (server checks)
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+
+  // On mount: ask the server if we already have a valid session cookie
+  useEffect(() => {
+    checkAdminSession().then(ok => setIsAdminLoggedIn(ok));
+  }, []);
+
+  const handleAdminLogout = async () => {
+    await adminLogout();
+    setIsAdminLoggedIn(false);
+    navigateTo('home');
+  };
 
   const saveCart = (newCart) => {
     setCart(newCart);
@@ -152,7 +161,7 @@ function App() {
           !isAdminLoggedIn ? (
             <AdminLoginOnboarding onLoginSuccess={() => setIsAdminLoggedIn(true)} />
           ) : (
-            <AdminPortal />
+            <AdminPortal onLogout={handleAdminLogout} />
           )
         )}
       </main>
@@ -277,8 +286,7 @@ function AdminLoginOnboarding({ onLoginSuccess }) {
     e.preventDefault();
     const ok = await verifyAdmin(username, password);
     if (ok) {
-      sessionStorage.setItem('dainty_admin_auth', 'true');
-      onLoginSuccess();
+      onLoginSuccess(); // cookie is already set by the server — no sessionStorage needed
     } else {
       setError('Invalid username or password credentials!');
     }

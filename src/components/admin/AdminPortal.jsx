@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, ShoppingBag, MessageSquareCode, Settings, Store, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, MessageSquareCode, Settings, Store, RefreshCw, LogOut } from 'lucide-react';
 import { navigateTo } from '../../Router';
 import AdminDashboard from './AdminDashboard';
 import ProductManager from './ProductManager';
@@ -7,21 +7,23 @@ import OrderManager from './OrderManager';
 import ChatManager from './ChatManager';
 import { resetDatabase } from '../../db';
 
-export default function AdminPortal() {
+export default function AdminPortal({ onLogout }) {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const handleReset = async () => {
-    if (window.confirm('WARNING: This will restore the database (catalog products, orders, chat messages) to their initial seed state, clearing any modifications you have made. Do you want to proceed?')) {
-      const pwd = window.prompt('Enter your admin password to confirm reset:');
-      if (!pwd) return;
+    if (window.confirm('WARNING: This will restore the database to its initial seed state, clearing all orders, messages and product changes. Continue?')) {
       try {
-        await resetDatabase(pwd);
+        await resetDatabase(); // session cookie authenticates this — no password prompt
         alert('Database reset successful. The page will now reload.');
         window.location.reload();
       } catch (err) {
         alert('Reset failed: ' + err.message);
       }
     }
+  };
+
+  const handleLogout = async () => {
+    if (onLogout) await onLogout();
   };
 
   return (
@@ -34,7 +36,7 @@ export default function AdminPortal() {
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          <div 
+          <div
             className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('dashboard')}
           >
@@ -42,7 +44,7 @@ export default function AdminPortal() {
             Dashboard Overview
           </div>
 
-          <div 
+          <div
             className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
             onClick={() => setActiveTab('products')}
           >
@@ -50,7 +52,7 @@ export default function AdminPortal() {
             Manage Catalog
           </div>
 
-          <div 
+          <div
             className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
             onClick={() => setActiveTab('orders')}
           >
@@ -58,7 +60,7 @@ export default function AdminPortal() {
             Customer Orders
           </div>
 
-          <div 
+          <div
             className={`admin-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
             onClick={() => setActiveTab('messages')}
           >
@@ -67,7 +69,7 @@ export default function AdminPortal() {
           </div>
 
           {/* Reset button utility */}
-          <div 
+          <div
             className="admin-nav-item"
             onClick={handleReset}
             style={{ color: '#b91c1c', borderTop: '1px solid rgba(0, 0, 0, 0.15)', marginTop: '2rem' }}
@@ -77,13 +79,23 @@ export default function AdminPortal() {
           </div>
 
           {/* Return to client site */}
-          <div 
+          <div
             className="admin-nav-item"
             onClick={() => navigateTo('home')}
             style={{ borderTop: '1px solid rgba(0, 0, 0, 0.15)', marginTop: '0.5rem', color: '#000000' }}
           >
             <Store size={18} style={{ color: '#000000' }} />
             Return to Store
+          </div>
+
+          {/* Logout */}
+          <div
+            className="admin-nav-item"
+            onClick={handleLogout}
+            style={{ color: '#78716c', marginTop: '0.5rem' }}
+          >
+            <LogOut size={18} style={{ color: '#78716c' }} />
+            Log Out
           </div>
         </nav>
       </aside>
@@ -98,9 +110,14 @@ export default function AdminPortal() {
             </h1>
             <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Welcome back, Admin. System is fully operational.</span>
           </div>
-          <button className="btn-secondary" onClick={() => navigateTo('home')}>
-            <Store size={16} /> View Storefront
-          </button>
+          <div style={{ display: 'flex', gap: '0.6rem' }}>
+            <button className="btn-secondary" onClick={() => navigateTo('home')}>
+              <Store size={16} /> View Storefront
+            </button>
+            <button className="btn-secondary" onClick={handleLogout} style={{ color: '#78716c' }}>
+              <LogOut size={16} /> Log Out
+            </button>
+          </div>
         </div>
 
         {/* Panel router switch */}
