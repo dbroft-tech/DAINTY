@@ -916,7 +916,7 @@ a {
 }
 
 .filter-checkbox:checked::after {
-  content: '✓';
+  content: 'âœ“';
   color: var(--color-brown-primary);
   font-size: 11px;
   position: absolute;
@@ -2943,7 +2943,7 @@ div[style*="background: rgba"] span,
   padding-left: 1.4rem;
 }
 
-/* ── SHOP BY — Section label headers ── */
+/* â”€â”€ SHOP BY â€” Section label headers â”€â”€ */
 .dropdown-section-label {
   padding: 0.5rem 1.2rem 0.3rem;
   font-size: 0.68rem;
@@ -2955,7 +2955,7 @@ div[style*="background: rgba"] span,
   background: #faf8f5;
 }
 
-/* ── SHOP BY — Material button (acts as an accordion trigger) ── */
+/* â”€â”€ SHOP BY â€” Material button (acts as an accordion trigger) â”€â”€ */
 .dropdown-material-item {
   display: flex !important;
   align-items: center;
@@ -3011,7 +3011,7 @@ div[style*="background: rgba"] span,
   display: block;
 }
 
-/* ── SHOP BY — Category panel that appears under a selected material ── */
+/* â”€â”€ SHOP BY â€” Category panel that appears under a selected material â”€â”€ */
 .material-categories-panel {
   background: #faf8f5;
   border-top: 1px solid var(--color-border-light);
@@ -3082,7 +3082,7 @@ div[style*="background: rgba"] span,
   flex-shrink: 0;
 }
 
-/* ── SHOP BY — wider dropdown ── */
+/* â”€â”€ SHOP BY â€” wider dropdown â”€â”€ */
 .shop-by-menu {
   min-width: 260px !important;
   max-height: 80vh;
@@ -3249,7 +3249,7 @@ div[style*="background: rgba"] span,
   justify-content: center !important;
 }
 
-/* FULL-WIDTH HERO SECTION — no sidebar, no 3-column grid */
+/* FULL-WIDTH HERO SECTION â€” no sidebar, no 3-column grid */
 .hero-grid-container {
   display: block;
   max-width: 1200px;
@@ -3257,20 +3257,20 @@ div[style*="background: rgba"] span,
   padding: 0 1.5rem;
 }
 
-/* Hero layout wrapper — just a padded container */
+/* Hero layout wrapper â€” just a padded container */
 .hero-layout-outer {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem 1.5rem 0 1.5rem;
 }
 
-/* Full-width slider — no column constraints */
+/* Full-width slider â€” no column constraints */
 .hero-slider-fullwidth {
   width: 100%;
   height: 480px !important;
 }
 
-/* Categories sidebar — hidden: categories only appear after material is selected */
+/* Categories sidebar â€” hidden: categories only appear after material is selected */
 .hero-categories-sidebar,
 .categories-sidebar-header,
 .categories-sidebar-list,
@@ -3278,7 +3278,7 @@ div[style*="background: rgba"] span,
   display: none !important;
 }
 
-/* Right promo column — hidden */
+/* Right promo column â€” hidden */
 .hero-featured-promo {
   display: none !important;
 }
@@ -3419,7 +3419,7 @@ div[style*="background: rgba"] span,
   .hero-slider-fullwidth {
     height: 360px !important;
   }
-  /* Always hidden — categories only shown after material selection */
+  /* Always hidden â€” categories only shown after material selection */
   .hero-categories-sidebar,
   .hero-featured-promo {
     display: none !important;
@@ -4454,7 +4454,7 @@ div[style*="background: rgba"] span,
   cursor: not-allowed;
 }
 
-/* Category Circle Strip — HIDDEN: categories only reveal after material is chosen */
+/* Category Circle Strip â€” HIDDEN: categories only reveal after material is chosen */
 .dainty-category-carousel-wrap,
 .dainty-category-carousel,
 .dainty-cat-item,
@@ -4828,3 +4828,117 @@ div[style*="background: rgba"] span,
 
 
 
+
+/* ==========================================================================
+   FINAL OVERRIDES â€” BLACK TEXT ON GOLD, FRAMED FOOTER, DESKTOP-LIKE MOBILE
+   ========================================================================== */
+
+/* 1. Black text on every metallic gold gradient surface */
+[style*="gradient-gold-metallic"],
+[style*="gradient-gold-metallic"] *,
+.header-nav-row-gold, .header-nav-row-gold *,
+.mobile-nav-drawer-gold, .mobile-nav-drawer-gold *,
+.btn-gold, .btn-gold *, .search-btn, .search-btn *,
+.promo-shop-now-btn, .promo-shop-now-btn *,
+.btn-checkout, .btn-checkout *, .btn-auth, .btn-auth *,
+.admin-btn-save, .admin-btn-save *, .btn-confirm-order, .btn-confirm-order *,
+.btn-primary, .btn-primary *, .btn-primary:hover, .btn-primary:hover *,
+.card-btn-bag-visible, .card-btn-bag-visible *,
+.card-btn-details-visible:hover, .card-btn-details-visible:hover *,
+.nav-item.active, .nav-item.active *, .cart-badge, .product-badge, .product-badge *,
+.chat-bubble-btn, .chat-bubble-btn *, .chat-header, .chat-header *,
+.chat-msg-row.customer .chat-bubble, .chat-msg-row.customer .chat-bubble *,
+.qty-btn:hover, .preset-chip.active, .preset-chip.active *,
+.gender-circle-btn.active, .filter-btn-reset:hover, .filter-btn-apply, .filter-btn-apply *,
+.cart-checkout-panel, .cart-checkout-panel *,
+.admin-sidebar, .admin-sidebar *, .glass-panel-dark, .glass-panel-dark *,
+footer, footer *, .site-footer, .site-footer *,
+.site-footer h3, .site-footer h4, .site-footer p, .site-footer a, .site-footer li, .site-footer span {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+footer svg, .site-footer svg, [style*="gradient-gold-metallic"] svg { color: #000000 !important; stroke: currentColor; }
+.cart-checkout-panel input, .cart-checkout-panel select, .cart-checkout-panel textarea { color: #000000 !important; }
+
+/* 2. Footer with a clear metallic frame lining */
+footer.site-footer {
+  position: relative;
+  background: var(--gradient-gold-metallic) !important;
+  border: 2px solid #7a5a12 !important;
+  outline: 1px solid #fcf6ba;
+  outline-offset: -7px;
+  box-shadow: inset 0 0 0 8px rgba(122, 90, 18, 0.0), inset 0 0 0 9px rgba(0, 0, 0, 0.55),
+              0 -4px 18px rgba(0, 0, 0, 0.12) !important;
+  margin: 0;
+  overflow: hidden;
+}
+footer.site-footer .footer-grid {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 3.5rem 2rem 2.5rem;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+  gap: 2.5rem;
+}
+footer.site-footer .footer-grid h4 {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+  padding-bottom: 0.45rem;
+}
+footer.site-footer .footer-bottom-strip {
+  padding: 1rem 2rem;
+  border-top: 1.5px solid rgba(0, 0, 0, 0.55);
+  background: transparent;
+}
+
+/* 3. Mobile: keep the desktop look, just scaled down */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video { max-width: 100%; }
+
+@media (max-width: 768px) {
+  html { font-size: 14px; }
+
+  .home-promo-row-two { grid-template-columns: 1fr 1fr !important; gap: 0.6rem !important; padding: 0 0.6rem !important; margin: 1.5rem auto 0.8rem !important; }
+  .home-promo-row-three { grid-template-columns: repeat(3, 1fr) !important; gap: 0.5rem !important; padding: 0 0.6rem !important; }
+  .home-promo-row-two *, .home-promo-row-three * { font-size: clamp(0.55rem, 2.6vw, 0.9rem); }
+  .home-promo-row-two h2, .home-promo-row-two h3, .home-promo-row-three h2, .home-promo-row-three h3 { font-size: clamp(0.8rem, 3.6vw, 1.3rem) !important; line-height: 1.15 !important; }
+  .promo-shop-now-btn { padding: 0.35rem 0.7rem !important; font-size: 0.6rem !important; }
+
+  .detail-layout { grid-template-columns: 1fr 1fr !important; gap: 0.9rem !important; padding: 1rem 0.6rem !important; }
+  .detail-layout h1 { font-size: clamp(1rem, 4.5vw, 1.6rem) !important; }
+
+  .dainty-community-section { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
+
+  .shop-layout { padding: 0 0.6rem !important; margin: 1.5rem auto !important; }
+  .horizontal-filter-panel { padding: 1rem !important; }
+  .filter-controls-row { grid-template-columns: repeat(3, 1fr) !important; gap: 0.6rem !important; }
+  .category-shapes-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 0.4rem !important; }
+
+  .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+  .hero-title { font-size: clamp(1.4rem, 7vw, 2.3rem) !important; }
+  .hero-description { font-size: clamp(0.75rem, 3.4vw, 0.92rem) !important; }
+  .hero-btn-discover { padding: 0.65rem 1.4rem !important; font-size: 0.72rem !important; }
+  .hero-arrow-edge-left, .hero-arrow-edge-right { width: 30px; height: 56px; }
+
+  footer.site-footer .footer-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    padding: 1.6rem 0.9rem 1.2rem;
+  }
+  footer.site-footer .footer-grid h3 { font-size: 0.95rem !important; letter-spacing: 0.06em !important; }
+  footer.site-footer .footer-grid h4 { font-size: 0.56rem !important; letter-spacing: 0.03em !important; margin-bottom: 0.6rem !important; }
+  footer.site-footer .footer-grid p,
+  footer.site-footer .footer-grid li,
+  footer.site-footer .footer-grid a,
+  footer.site-footer .footer-grid span { font-size: 0.56rem !important; line-height: 1.45 !important; letter-spacing: 0.02em !important; }
+  footer.site-footer .footer-grid ul { gap: 0.35rem !important; }
+  footer.site-footer .footer-grid li svg { width: 10px; height: 10px; flex-shrink: 0; }
+  footer.site-footer .footer-bottom-strip { padding: 0.7rem 0.9rem; }
+  footer.site-footer .footer-bottom-strip > div { font-size: 0.58rem !important; gap: 0.5rem !important; }
+  footer.site-footer { outline-offset: -5px; }
+}
+
+@media (max-width: 420px) {
+  html { font-size: 13px; }
+  footer.site-footer .footer-grid { grid-template-columns: 1.3fr 1fr 1fr 1.2fr; gap: 0.45rem; padding: 1.3rem 0.6rem 1rem; }
+  footer.site-footer .footer-grid p { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+}

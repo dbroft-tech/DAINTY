@@ -173,18 +173,18 @@ function App() {
 
       {/* 4. Footer (Metallic Gold Gradient Theme) */}
       {!isAdminView && (
-        <footer className="site-footer-gold" style={{ background: '#141210', color: '#e7e5e4' }}>
+        <footer className="site-footer site-footer-gold">
           {/* Metallic Gold Accent Bar */}
           <div style={{ height: '4px', width: '100%', background: 'var(--gradient-gold-metallic)' }}></div>
           
-          <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '3.5rem 2rem 2.5rem 2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2.5rem' }}>
+          <div className="footer-grid">
             
             {/* Branding Column */}
             <div>
               <h3 style={{ color: '#ffffff', fontFamily: 'var(--font-luxury, serif)', fontSize: '1.5rem', letterSpacing: '0.12em', marginBottom: '0.4rem' }}>
                 DAINTY
               </h3>
-              <span style={{ background: 'var(--gradient-gold-metallic)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.3em', display: 'block', marginBottom: '1.2rem' }}>
+              <span style={{ color: '#000000', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.3em', display: 'block', marginBottom: '1.2rem' }}>
                 STUDS & CHAINS
               </span>
               <p style={{ fontSize: '0.82rem', lineHeight: '1.7', color: 'rgba(255,255,255,0.75)' }}>
@@ -233,7 +233,7 @@ function App() {
           </div>
 
           {/* Metallic Gold Gradient Bottom Strip */}
-          <div style={{ background: 'var(--gradient-gold-metallic)', color: '#000000', padding: '1rem 2rem' }}>
+          <div className="footer-bottom-strip">
             <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', fontSize: '0.78rem', fontWeight: '700' }}>
               
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
