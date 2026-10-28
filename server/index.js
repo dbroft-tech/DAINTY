@@ -300,15 +300,22 @@ app.post('/api/relworx/mobile-money/validate-mobile-number', async (req, res) =>
 // ═══════════════════════════════════════════════════════════
 app.use(express.static(DIST_PATH));
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(DIST_PATH, 'index.html'));
+// SPA fallback — middleware form works in both Express 4 and 5
+// (Express 5 crashes on app.get('*') with "Missing parameter name").
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
+  res.sendFile(path.join(DIST_PATH, 'index.html'), err => err && next(err));
 });
 
+process.on('uncaughtException',  e => console.error('[Fatal] uncaughtException:', e));
+process.on('unhandledRejection', e => console.error('[Fatal] unhandledRejection:', e));
+
 // ═══════════════════════════════════════════════════════════
-// Start
+// Start — bind to Hostinger-assigned PORT on all interfaces
 // ═══════════════════════════════════════════════════════════
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🏆 DAINTY server → http://localhost:${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
   console.log(`   Auth mode : ${ADMIN_HASH ? 'bcrypt hash' : 'plain env (dev)'}`);
-  console.log(`   Relworx   : ${API_KEY ? '✅ configured' : '⚠️  not configured'}`);
-});
+  console.log(`   Relworx   : ${API_KEY ? 'configured' : 'not configured'}`);
+}).on('error', e => console.error('[Fatal] listen failed:', e));
