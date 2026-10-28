@@ -14,14 +14,37 @@
  * ============================================================
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, accessSync, constants } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHmac, randomBytes } from 'node:crypto';
+import os from 'node:os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_DIR  = join(__dirname, '..', 'data');
-mkdirSync(DATA_DIR, { recursive: true });
+
+// Resolve a writable data directory.
+// On Hostinger shared hosting the project root may be read-only;
+// fall back to os.tmpdir() so the server can still start.
+function resolveDataDir() {
+  const candidates = [
+    join(__dirname, '..', 'data'),           // <project>/data  (preferred)
+    join(os.homedir(), 'dainty_data'),        // ~/dainty_data   (shared host home)
+    join(os.tmpdir(),  'dainty_data'),        // /tmp/dainty_data (last resort)
+  ];
+  for (const dir of candidates) {
+    try {
+      mkdirSync(dir, { recursive: true });
+      // Verify we can actually write
+      const probe = join(dir, '.write_probe');
+      writeFileSync(probe, '1', 'utf8');
+      return dir;
+    } catch { /* try next */ }
+  }
+  throw new Error('No writable data directory found. Checked: ' + candidates.join(', '));
+}
+
+const DATA_DIR = resolveDataDir();
+console.info('[DB] Data directory:', DATA_DIR);
 
 // ── Atomic JSON helpers ──────────────────────────────────────
 function readJSON(file, fallback) {
