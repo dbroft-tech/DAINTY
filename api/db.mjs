@@ -89,13 +89,18 @@ function hashPassword(plain) {
   return createHmac('sha256', getSalt()).update(plain).digest('hex');
 }
 
-// Seed default admin password on first run
+// Seed admin password on first run — only if ADMIN_PASSWORD env var is set.
+// server/index.js handles auth independently via bcrypt (ADMIN_PASSWORD_HASH).
 {
   const s = getSettings();
   if (!s.admin_password_hash) {
-    const defaultPass = process.env.ADMIN_PASSWORD || 'admin123';
-    setSetting('admin_password_hash', hashPassword(defaultPass));
-    console.info('[DB] Admin password initialised. Change ADMIN_PASSWORD in .env before going live!');
+    const seedPass = process.env.ADMIN_PASSWORD;
+    if (seedPass) {
+      setSetting('admin_password_hash', hashPassword(seedPass));
+      console.info('[DB] Admin password initialised from ADMIN_PASSWORD env var.');
+    } else {
+      console.info('[DB] No ADMIN_PASSWORD set — skipping settings.json password seed (auth handled by bcrypt in server/index.js).');
+    }
   }
 }
 
