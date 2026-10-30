@@ -320,8 +320,11 @@ createServer(async (req, res) => {
 
   send(res, 405, { error: 'Method not allowed.' });
 
-}).listen(PORT, () => {
-  console.log(`🏆 DAINTY server running → http://localhost:${PORT}`);
-  console.log(`   Database → data/dainty.db`);
-  console.log(`   Relworx  → ${API_KEY ? '✅ configured' : '⚠️  not configured (set RELWORX_API_KEY)'}`);
-});
+}).listen(PORT, '0.0.0.0', () => {
+  console.log(`Server listening on port ${PORT}`);
+  console.log(`   Relworx  : ${API_KEY ? 'configured' : 'not configured (set RELWORX_API_KEY)'}`);
+}).on('error', e => console.error('[Fatal] listen failed:', e));
+
+process.on('uncaughtException',  e => console.error('[Fatal] uncaughtException:', e));
+process.on('unhandledRejection', e => console.error('[Fatal] unhandledRejection:', e));
+
