@@ -29,10 +29,9 @@ import {
 
 // ── Config ────────────────────────────────────────────────────
 const PORT           = Number(process.env.PORT || 3000);
-const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'dev_secret_change_me_in_production';
+const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || '';
 const ADMIN_USER     = process.env.ADMIN_USERNAME  || 'admin';
-const ADMIN_HASH     = process.env.ADMIN_PASSWORD_HASH || ''; // bcrypt hash in prod
-const ADMIN_PASS_DEV = process.env.ADMIN_PASSWORD  || 'admin123'; // fallback for dev
+const ADMIN_HASH     = process.env.ADMIN_PASSWORD_HASH || '';
 
 const API_KEY    = process.env.RELWORX_API_KEY;
 const ACCOUNT_NO = process.env.RELWORX_ACCOUNT_NO;
@@ -52,13 +51,10 @@ app.use(cookieParser());
 // Admin Auth Helpers
 // ═══════════════════════════════════════════════════════════
 
-/** Verify password against bcrypt hash (prod) or plain env var (dev fallback). */
+/** Verify password against bcrypt hash stored in ADMIN_PASSWORD_HASH. */
 async function verifyPassword(plain) {
-  if (ADMIN_HASH) {
-    return bcrypt.compare(plain, ADMIN_HASH);
-  }
-  // Dev-only fallback: compare plain text
-  return plain === ADMIN_PASS_DEV;
+  if (!ADMIN_HASH) return false; // refuse login if hash is not configured
+  return bcrypt.compare(plain, ADMIN_HASH);
 }
 
 /** Middleware — require a valid admin JWT cookie. */
@@ -312,10 +308,22 @@ process.on('uncaughtException',  e => console.error('[Fatal] uncaughtException:'
 process.on('unhandledRejection', e => console.error('[Fatal] unhandledRejection:', e));
 
 // ═══════════════════════════════════════════════════════════
+// Production startup guard — refuse insecure defaults
+// ═══════════════════════════════════════════════════════════
+if (!SESSION_SECRET) {
+  console.error('[Fatal] ADMIN_SESSION_SECRET is not set. Set a strong random secret in your environment variables.');
+  process.exit(1);
+}
+if (!ADMIN_HASH) {
+  console.error('[Fatal] ADMIN_PASSWORD_HASH is not set. Generate one with: node -e "import(\'bcryptjs\').then(m=>m.hash(\'YOUR_PASS\',12).then(console.log))"');
+  process.exit(1);
+}
+
+// ═══════════════════════════════════════════════════════════
 // Start — bind to Hostinger-assigned PORT on all interfaces
 // ═══════════════════════════════════════════════════════════
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
-  console.log(`   Auth mode : ${ADMIN_HASH ? 'bcrypt hash' : 'plain env (dev)'}`);
+  console.log(`   Auth mode : bcrypt hash`);
   console.log(`   Relworx   : ${API_KEY ? 'configured' : 'not configured'}`);
 }).on('error', e => console.error('[Fatal] listen failed:', e));
