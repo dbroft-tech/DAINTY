@@ -1,22 +1,27 @@
-// Hostinger deploys only the build output directory (dist/) and runs the entry
-// file from there. Copy the Express server into dist/ so `server.js` exists.
-import { cpSync, readFileSync, writeFileSync } from 'node:fs';
+// Hostinger deploys only the build output directory (dist/) and does NOT install
+// node_modules there. So bundle the Express server + all its packages into one
+// self-contained dist/server.js that needs nothing but Node itself.
+import { build } from 'esbuild'; // ships with vite
+import { writeFileSync } from 'node:fs';
 
-cpSync('server.js', 'dist/server.js');
-cpSync('server', 'dist/server', { recursive: true });
-cpSync('api', 'dist/api', { recursive: true });
+await build({
+  entryPoints: ['server.js'],
+  outfile: 'dist/server.js',
+  bundle: true,
+  platform: 'node',
+  target: 'node22',
+  format: 'esm',
+  // Bundled CommonJS packages (express etc.) call require() for Node built-ins.
+  banner: {
+    js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);",
+  },
+  logLevel: 'info',
+});
 
-// Runtime-only package.json (ESM + prod deps) so Node and npm work inside dist/.
-const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-const runtimeDeps = ['express', 'bcryptjs', 'jsonwebtoken', 'cookie-parser'];
+// Mark dist/ as ESM so Node loads server.js correctly.
 writeFileSync('dist/package.json', JSON.stringify({
-  name: pkg.name,
-  private: true,
-  version: pkg.version,
-  type: 'module',
-  engines: pkg.engines,
+  name: 'dainty-runtime', private: true, type: 'module',
   scripts: { start: 'node server.js' },
-  dependencies: Object.fromEntries(runtimeDeps.map(d => [d, pkg.dependencies[d]])),
 }, null, 2));
 
-console.log('[postbuild] Copied server into dist/');
+console.log('[postbuild] Bundled server into dist/server.js');

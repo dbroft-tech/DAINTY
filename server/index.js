@@ -41,11 +41,13 @@ const BASE_URL   = (process.env.RELWORX_BASE_URL || 'https://payments.relworx.co
 const WEBHOOK_URL= process.env.RELWORX_WEBHOOK_URL;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// Repo layout: <root>/server + <root>/dist. Hostinger layout (output dir = dist):
-// server/ is copied into dist/, so the SPA files sit in the parent folder.
-const DIST_PATH = existsSync(path.join(__dirname, '..', 'dist', 'index.html'))
-  ? path.join(__dirname, '..', 'dist')
-  : path.join(__dirname, '..');
+// Find the built SPA: repo layout (<root>/dist), or Hostinger layout where the
+// server is bundled into dist/server.js and sits next to index.html.
+const DIST_PATH = [
+  path.join(__dirname, '..', 'dist'),
+  __dirname,
+  path.join(__dirname, '..'),
+].find(p => existsSync(path.join(p, 'index.html'))) || path.join(__dirname, '..', 'dist');
 
 // ── Express app ──────────────────────────────────────────────
 const app = express();
