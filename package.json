@@ -10,7 +10,7 @@
     "dev": "vite",
     "start": "node server.js",
     "api": "node server.js",
-    "build": "vite build",
+    "build": "vite build && node scripts/postbuild.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

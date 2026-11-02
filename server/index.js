@@ -18,6 +18,7 @@ import jwt            from 'jsonwebtoken';
 import cookieParser   from 'cookie-parser';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import path           from 'node:path';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -40,7 +41,11 @@ const BASE_URL   = (process.env.RELWORX_BASE_URL || 'https://payments.relworx.co
 const WEBHOOK_URL= process.env.RELWORX_WEBHOOK_URL;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIST_PATH = path.join(__dirname, '..', 'dist');
+// Repo layout: <root>/server + <root>/dist. Hostinger layout (output dir = dist):
+// server/ is copied into dist/, so the SPA files sit in the parent folder.
+const DIST_PATH = existsSync(path.join(__dirname, '..', 'dist', 'index.html'))
+  ? path.join(__dirname, '..', 'dist')
+  : path.join(__dirname, '..');
 
 // ── Express app ──────────────────────────────────────────────
 const app = express();
