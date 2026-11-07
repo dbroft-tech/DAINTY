@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import HeroSlideshow from './HeroSlideshow';
 import ProductCard from './ProductCard';
 import CollectionCard from './CollectionCard';
@@ -15,7 +16,29 @@ import {
 } from 'lucide-react';
 
 export default function HomeView({ onAddToBag }) {
-  const allProducts = getProducts();
+  const [allProducts, setAllProducts] = useState(() => getProducts());
+
+  // Listen for real-time product database updates (add, edit, delete, server sync)
+  useEffect(() => {
+    const handleProductsChange = () => {
+      setAllProducts(getProducts());
+    };
+    window.addEventListener('storage', handleProductsChange);
+    window.addEventListener('dainty_products_changed', handleProductsChange);
+    return () => {
+      window.removeEventListener('storage', handleProductsChange);
+      window.removeEventListener('dainty_products_changed', handleProductsChange);
+    };
+  }, []);
+
+  // Sort products with most recently added creations first
+  const sortedProducts = useMemo(() => {
+    return [...allProducts].sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [allProducts]);
 
   // Curated collections matching the attached photo
   const featuredCollections = [
@@ -77,15 +100,27 @@ export default function HomeView({ onAddToBag }) {
     }
   ];
 
-  // New arrivals (first 4 items for 4-column desktop / 2-column mobile layout)
-  const newArrivals = allProducts
-    .filter(p => p.new_arrival)
-    .slice(0, 4);
+  // New arrivals: prioritizing newly created products (first 4 items for 4-column layout)
+  const newArrivals = useMemo(() => {
+    const arrivals = sortedProducts.filter(p => p.new_arrival);
+    if (arrivals.length < 4) {
+      const arrivalIds = new Set(arrivals.map(a => a.id));
+      const remaining = sortedProducts.filter(p => !arrivalIds.has(p.id));
+      return [...arrivals, ...remaining].slice(0, 4);
+    }
+    return arrivals.slice(0, 4);
+  }, [sortedProducts]);
 
-  // Best sellers (8 items for 4-column desktop x 2 rows / 2-column mobile x 4 rows)
-  const bestSellers = allProducts
-    .filter(p => p.best_seller)
-    .slice(0, 8);
+  // Best sellers: prioritizing high-demand pieces and recent creations (first 8 items)
+  const bestSellers = useMemo(() => {
+    const sellers = sortedProducts.filter(p => p.best_seller);
+    if (sellers.length < 8) {
+      const sellerIds = new Set(sellers.map(s => s.id));
+      const remaining = sortedProducts.filter(p => !sellerIds.has(p.id));
+      return [...sellers, ...remaining].slice(0, 8);
+    }
+    return sellers.slice(0, 8);
+  }, [sortedProducts]);
 
   return (
     <div className="dainty-home-container">

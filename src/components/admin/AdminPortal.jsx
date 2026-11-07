@@ -60,6 +60,7 @@ import {
   resetDatabase,
   getAdminCredentials,
   updateAdminCredentials,
+  compressImage,
   categories
 } from '../../db';
 
@@ -219,12 +220,16 @@ export default function AdminPortal({ onLogout } = {}) {
   useEffect(() => {
     reloadData();
 
-    // Cross-tab real-time sync with customers
+    // Cross-tab and in-memory real-time sync with database
     const handleStorageChange = () => {
       reloadData();
     };
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('dainty_products_changed', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('dainty_products_changed', handleStorageChange);
+    };
   }, []);
 
   // Auto-scroll chat to bottom
@@ -2245,22 +2250,20 @@ function ProductFormModal({ product, onClose, onSave }) {
     formData.images?.[0] || product?.image || '/images/hero_rings.png'
   );
 
-  // File Upload Handler (Converts uploaded image to Base64 Data URL)
-  const handleFileUpload = (e) => {
+  // File Upload Handler with client-side image optimization
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64Url = event.target?.result;
-        if (base64Url) {
-          setImagePreview(base64Url);
-          setFormData((prev) => ({
-            ...prev,
-            images: [base64Url, ...(prev.images?.slice(1) || [])]
-          }));
-        }
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedUrl = await compressImage(file, 1000, 1000, 0.82);
+        setImagePreview(compressedUrl);
+        setFormData((prev) => ({
+          ...prev,
+          images: [compressedUrl, ...(prev.images?.slice(1) || [])]
+        }));
+      } catch (err) {
+        console.error('Image upload compression error:', err);
+      }
     }
   };
 
@@ -2277,13 +2280,23 @@ function ProductFormModal({ product, onClose, onSave }) {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
-    onSave({
+    const activeImg = imagePreview && imagePreview.trim() ? imagePreview : '/images/hero_rings.png';
+    const payload = {
       ...formData,
+      name: formData.name.trim(),
       price: Number(formData.price) || 50000,
       sale_price: formData.sale_price ? Number(formData.sale_price) : null,
       stock_quantity: Number(formData.stock_quantity) || 0,
-      images: [imagePreview, ...(formData.images?.slice(1) || [])]
-    });
+      images: [activeImg, ...(formData.images?.slice(1) || [])].filter(Boolean)
+    };
+    if (!payload.images || payload.images.length === 0) {
+      payload.images = ['/images/hero_rings.png'];
+    }
+    if (!product) {
+      delete payload.id;
+    }
+
+    onSave(payload);
   };
 
   return (

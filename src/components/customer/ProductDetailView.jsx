@@ -10,19 +10,34 @@ export default function ProductDetailView({ routeParams, onAddToBag }) {
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
 
-  // Load product details
+  // Load product details and listen for real-time changes
   useEffect(() => {
-    const products = getProducts();
-    const found = products.find(p => p.id === routeParams.id);
-    if (found) {
-      setProduct(found);
-      setSelectedImageIdx(0);
-      setSelectedColor(found.color || 'Gold');
-    }
+    const loadProduct = () => {
+      const products = getProducts();
+      const found = products.find(p => p.id === routeParams.id);
+      if (found) {
+        setProduct(found);
+        setSelectedColor(found.color || 'Gold');
+      } else {
+        setProduct(null);
+      }
+    };
+
+    loadProduct();
+    setSelectedImageIdx(0);
+
+    window.addEventListener('storage', loadProduct);
+    window.addEventListener('dainty_products_changed', loadProduct);
+    return () => {
+      window.removeEventListener('storage', loadProduct);
+      window.removeEventListener('dainty_products_changed', loadProduct);
+    };
   }, [routeParams.id]);
 
-  // Capped Images list (exactly up to 4 images)
-  const activeImages = product && product.images ? product.images.slice(0, 4) : [];
+  // Capped Images list (up to 4 images with robust fallback)
+  const activeImages = (product && Array.isArray(product.images) && product.images.length > 0)
+    ? product.images.filter(Boolean).slice(0, 4)
+    : (product?.image ? [product.image] : ['/images/hero_rings.png']);
 
   // Automatic slideshow effect
   useEffect(() => {
