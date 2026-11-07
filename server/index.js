@@ -306,35 +306,42 @@ app.post('/api/relworx/mobile-money/validate-mobile-number', async (req, res) =>
 });
 
 // ═══════════════════════════════════════════════════════════
-// Frontend Serving (Vite in development / Static in production)
+// Frontend Serving (Static in production / Vite in development)
 // ═══════════════════════════════════════════════════════════
 const canUseVite = process.env.NODE_ENV !== 'production' && existsSync(path.join(__dirname, '..', 'vite.config.js'));
 
 if (canUseVite) {
-  try {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
+  let viteMiddleware = null;
+  import('vite').then(({ createServer: createViteServer }) => {
+    return createViteServer({
       server: { middlewareMode: true, host: '0.0.0.0' },
       appType: 'spa',
     });
-    app.use(vite.middlewares);
-  } catch (err) {
-    console.warn('[Server] Could not initialize Vite middleware, falling back to static files:', err.message);
-    app.use(express.static(DIST_PATH));
-    app.use((req, res, next) => {
-      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-      if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
-      res.sendFile(path.join(DIST_PATH, 'index.html'), err => err && next(err));
-    });
-  }
-} else {
-  app.use(express.static(DIST_PATH));
+  }).then(vite => {
+    viteMiddleware = vite.middlewares;
+    console.log('[Server] Vite dev middleware initialized.');
+  }).catch(err => {
+    console.warn('[Server] Could not initialize Vite middleware:', err.message);
+  });
+
+  // Delegate to Vite dev server in development
   app.use((req, res, next) => {
-    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-    if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
-    res.sendFile(path.join(DIST_PATH, 'index.html'), err => err && next(err));
+    if (viteMiddleware) {
+      return viteMiddleware(req, res, next);
+    }
+    next();
   });
 }
+
+// Serve built React SPA (dist/)
+app.use(express.static(DIST_PATH));
+
+// SPA fallback — middleware form works in both Express 4 and 5
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
+  res.sendFile(path.join(DIST_PATH, 'index.html'), err => err && next(err));
+});
 
 process.on('uncaughtException',  e => console.error('[Fatal] uncaughtException:', e));
 process.on('unhandledRejection', e => console.error('[Fatal] unhandledRejection:', e));
