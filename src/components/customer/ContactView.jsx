@@ -33,7 +33,7 @@ export default function ContactView() {
                 <MapPin size={22} style={{ color: 'var(--color-gold-dark)', flexShrink: 0, marginTop: '2px' }} />
                 <div>
                   <h4 style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-gold-dark)', fontWeight: 800 }}>Location</h4>
-                  <p style={{ fontSize: '0.95rem', color: '#1c1917', fontWeight: 600 }}>Plot 45, Acacia Avenue, Kampala, Uganda</p>
+                  <p style={{ fontSize: '0.95rem', color: '#1c1917', fontWeight: 600 }}>Goodwill zone, Kampala, Uganda</p>
                 </div>
               </div>
 
@@ -49,7 +49,7 @@ export default function ContactView() {
                 <Mail size={22} style={{ color: 'var(--color-gold-dark)', flexShrink: 0, marginTop: '2px' }} />
                 <div>
                   <h4 style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-gold-dark)', fontWeight: 800 }}>Email</h4>
-                  <a href="mailto:info@daintystuds.com" style={{ fontSize: '0.95rem', color: '#1c1917', fontWeight: 600 }}>info@daintystuds.com</a>
+                  <a href="mailto:daintystudsandchains@gmail.com" style={{ fontSize: '0.95rem', color: '#1c1917', fontWeight: 600 }}>daintystudsandchains@gmail.com</a>
                 </div>
               </div>
 
@@ -57,8 +57,8 @@ export default function ContactView() {
                 <Clock size={22} style={{ color: 'var(--color-gold-dark)', flexShrink: 0, marginTop: '2px' }} />
                 <div>
                   <h4 style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-gold-dark)', fontWeight: 800 }}>Store Hours</h4>
-                  <p style={{ fontSize: '0.95rem', color: '#1c1917', fontWeight: 600 }}>Mon - Sat: 9:00 AM - 7:00 PM</p>
-                  <p style={{ fontSize: '0.85rem', color: '#44403c' }}>Sunday: Closed (Online Orders Active)</p>
+                  <p style={{ fontSize: '0.95rem', color: '#1c1917', fontWeight: 600 }}>Mon - Sun: 24 hrs</p>
+                  <p style={{ fontSize: '0.85rem', color: '#44403c' }}>Sunday: open (Online Orders Active)</p>
                 </div>
               </div>
             </div>
@@ -106,7 +106,7 @@ export default function ContactView() {
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(28, 25, 23, 0.45)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', padding: '2rem', textAlign: 'center' }}>
             <MapPin size={36} style={{ color: 'var(--color-gold-primary)', marginBottom: '1rem' }} />
             <h3 style={{ color: '#fff', fontSize: '1.4rem', marginBottom: '0.5rem' }}>DAINTY Flagship Showroom</h3>
-            <p style={{ color: 'var(--color-gold-light)', fontSize: '0.9rem' }}>Acacia Mall Precinct, Kampala • Valet Parking Available</p>
+            <p style={{ color: 'var(--color-gold-light)', fontSize: '0.9rem' }}>Goodwillzone, along Nsambya Kampala</p>
           </div>
         </div>
       </div>
