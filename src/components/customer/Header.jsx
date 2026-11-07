@@ -82,7 +82,7 @@ export default function Header({ cartCount, currentRoute }) {
       <div className="dainty-top-announcement-bar">
         <span className="announcement-arrow">‹</span>
         <span className="announcement-text">
-          Free Delivery in Kampala On Orders Over UGX 150,000 · Cash on Delivery &amp; Mobile Money
+         Delivery across Uganda for all Orders  · Cash on Delivery &amp; Mobile Money
         </span>
         <span className="announcement-arrow">›</span>
       </div>
