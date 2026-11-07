@@ -9,8 +9,13 @@ export default function ChatManager() {
   
   const chatEndRef = useRef(null);
 
-  const reloadChats = () => {
-    getChats().then(setChats).catch(console.error);
+  const reloadChats = async () => {
+    try {
+      const activeChats = await getChats();
+      setChats(Array.isArray(activeChats) ? activeChats : []);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -27,7 +32,7 @@ export default function ChatManager() {
   }, []);
 
   // Scroll to bottom of chat panel when messages update
-  const activeChat = chats.find(c => c.chatId === activeChatId);
+  const activeChat = (Array.isArray(chats) ? chats : []).find(c => c.chatId === activeChatId);
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });

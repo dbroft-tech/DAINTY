@@ -37,8 +37,13 @@ export default function ProductManager() {
   // Whether a primary material has been chosen (gates category selection)
   const materialChosen = primaryMaterials.includes(formData.material);
 
-  const reloadProducts = () => {
-    getProducts().then(setProducts).catch(console.error);
+  const reloadProducts = async () => {
+    try {
+      const res = await getProducts();
+      setProducts(Array.isArray(res) ? res : []);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -94,7 +99,7 @@ export default function ProductManager() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you absolutely sure you want to delete this jewelry product from your store catalog?')) {
       await deleteProduct(id);
-      reloadProducts();
+      await reloadProducts();
     }
   };
 
@@ -136,7 +141,7 @@ export default function ProductManager() {
 
     await saveProduct(payload);
     setIsModalOpen(false);
-    reloadProducts();
+    await reloadProducts();
   };
 
   const filteredSubcats = subcategories.filter(s => s.categoryId === formData.category_id);

@@ -21,18 +21,26 @@ export default function ChatWidget() {
 
   const chatEndRef = useRef(null);
 
-  // Reload messages from server
+  // Reload messages from DB
   const reloadMessages = () => {
-    getMessages(chatId)
-      .then(msgs => setMessages(msgs.map(m => ({ ...m, chatId: m.chat_id || m.chatId }))))
-      .catch(console.error);
+    const allMsgs = getMessages();
+    // Filter messages for this specific customer chat
+    const filtered = allMsgs.filter(m => m.chatId === chatId);
+    setMessages(filtered);
   };
 
-  // Load messages on mount and poll every 5 s for admin replies
+  // Load messages on mount and listen for storage changes (for cross-tab admin chat!)
   useEffect(() => {
     reloadMessages();
-    const interval = setInterval(reloadMessages, 5000);
-    return () => clearInterval(interval);
+
+    const handleStorageChange = () => {
+      reloadMessages();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [chatId]);
 
   // Scroll to bottom when messages change or panel opens
@@ -42,30 +50,34 @@ export default function ChatWidget() {
     }
   }, [messages, isOpen]);
 
-  const handleStartChat = async (e) => {
+  const handleStartChat = (e) => {
     e.preventDefault();
     if (nameInput.trim()) {
       const name = nameInput.trim();
       setCustomerName(name);
       sessionStorage.setItem('dainty_chat_name', name);
-      await saveMessage(chatId, 'admin', `Hello ${name}! Welcome to DAINTY STUDS AND CHAINS. Tell us what you are looking for!`);
+      
+      // Save initial customer greeting or system message
+      saveMessage(chatId, 'admin', `Hello ${name}! Welcome to DAINTY STUDS AND CHAINS. Tell us what you are looking for!`);
       reloadMessages();
     }
   };
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
     const content = inputText.trim();
-    await saveMessage(chatId, 'customer', content);
+    saveMessage(chatId, 'customer', content);
     setInputText('');
     reloadMessages();
 
-    // Auto-reply after 3 s if no admin has replied yet
-    setTimeout(async () => {
-      const msgs = await getMessages(chatId);
+    // Auto-reply simulation for demo purposes if no admin is active
+    setTimeout(() => {
+      const msgs = getMessages().filter(m => m.chatId === chatId);
       const lastMsg = msgs[msgs.length - 1];
+      
+      // Only reply if the last message is still the customer's (i.e. admin hasn't replied yet)
       if (lastMsg && lastMsg.sender === 'customer') {
         let reply = "Thank you for messaging DAINTY! Our administrators have been notified. You can also contact us instantly via WhatsApp at +256 788 227027 or complete your order via Checkout.";
         if (content.toLowerCase().includes('price') || content.toLowerCase().includes('how much')) {
@@ -73,7 +85,8 @@ export default function ChatWidget() {
         } else if (content.toLowerCase().includes('gold') || content.toLowerCase().includes('material')) {
           reply = "Our jewelry is crafted using premium 18K Gold Plated Stainless Steel and Sterling Silver, ensuring water resistance and tarnish-free durability.";
         }
-        await saveMessage(chatId, 'admin', reply);
+        
+        saveMessage(chatId, 'admin', reply);
         reloadMessages();
       }
     }, 3000);

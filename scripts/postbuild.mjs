@@ -11,6 +11,7 @@ await build({
   platform: 'node',
   target: 'node22',
   format: 'esm',
+  external: ['vite'],
   // Bundled CommonJS packages (express etc.) call require() for Node built-ins.
   banner: {
     js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);",

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, ChevronDown, ChevronRight, Heart, Lock, X } from 'lucide-react';
-import { navigateTo } from '../../Router';
+import { ShoppingBag, ChevronDown, ChevronRight, ChevronLeft, Heart, Lock, X } from 'lucide-react';
+import { navigateTo, goBack } from '../../Router';
 import { categories } from '../../db';
 
 // The two primary material groups
@@ -78,6 +78,15 @@ export default function Header({ cartCount, currentRoute }) {
 
   return (
     <header className="site-header-container" ref={headerRef}>
+      {/* ── Top Announcement Bar (Matching Attached Photo) ── */}
+      <div className="dainty-top-announcement-bar">
+        <span className="announcement-arrow">‹</span>
+        <span className="announcement-text">
+          Free Delivery in Kampala On Orders Over UGX 150,000 · Cash on Delivery &amp; Mobile Money
+        </span>
+        <span className="announcement-arrow">›</span>
+      </div>
+
       {/* ── Row 1: Logo, Search Bar, Right Actions ── */}
       <div className="header-middle-row">
         <a href="#" className="header-logo-link" onClick={(e) => { e.preventDefault(); navigateTo('home'); }}>
@@ -140,6 +149,17 @@ export default function Header({ cartCount, currentRoute }) {
       <div className="header-nav-row-gold">
         <div className="nav-row-inner">
           <div className="nav-links-left">
+            {/* BACK BUTTON */}
+            <button
+              type="button"
+              className="gold-nav-item"
+              onClick={() => goBack('home')}
+              title="Back to Previous Page"
+              style={{ background: 'none', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 800, cursor: 'pointer' }}
+            >
+              <ChevronLeft size={13} strokeWidth={3} />
+              <span>BACK</span>
+            </button>
 
             {/* HOME */}
             <a

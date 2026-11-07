@@ -9,19 +9,21 @@ export default function AdminDashboard({ onSelectTab }) {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    getOrders().then(setOrders).catch(console.error);
-    getProducts().then(setProducts).catch(console.error);
+    Promise.resolve(getOrders()).then(res => setOrders(Array.isArray(res) ? res : [])).catch(console.error);
+    Promise.resolve(getProducts()).then(res => setProducts(Array.isArray(res) ? res : [])).catch(console.error);
   }, []);
 
   // Compute metrics
-  const totalOrders = orders.length;
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  const safeProducts = Array.isArray(products) ? products : [];
+  const totalOrders = safeOrders.length;
   
   // Total Revenue: sum of all completed (delivered or shipped) orders, or just all orders
-  const totalRevenue = orders
+  const totalRevenue = safeOrders
     .filter(o => o.status !== 'Cancelled')
-    .reduce((acc, o) => acc + o.total_amount, 0);
+    .reduce((acc, o) => acc + (Number(o.total_amount) || 0), 0);
 
-  const totalProducts = products.length;
+  const totalProducts = safeProducts.length;
   
   // Low stock products count (stock <= 5)
   const lowStockProducts = products.filter(p => p.stock_quantity <= 5);

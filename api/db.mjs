@@ -27,7 +27,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // fall back to os.tmpdir() so the server can still start.
 function resolveDataDir() {
   const candidates = [
-    join(__dirname, '..', 'data'),           // <project>/data  (preferred)
+    join(__dirname, '..', 'data'),           // <project>/data  (preferred when in server/ or dist/)
+    join(__dirname, 'data'),                 // <app_root>/data (when deployed from dist directly)
     join(os.homedir(), 'dainty_data'),        // ~/dainty_data   (shared host home)
     join(os.tmpdir(),  'dainty_data'),        // /tmp/dainty_data (last resort)
   ];

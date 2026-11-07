@@ -249,12 +249,8 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
       setPaymentStatus(result.status);
 
       if (result.status === 'successful') {
-        const newOrder = await saveOrder({
+        const newOrder = saveOrder({
           ...checkoutData,
-          customer_name:  checkoutData.name,
-          customer_phone: checkoutData.phone,
-          customer_email: checkoutData.email,
-          delivery_address: checkoutData.address,
           payment_method: `Mobile Money – ${selectedNetwork} (via Relworx)`,
           momo_phone: msisdn,
           momo_network: selectedNetwork,

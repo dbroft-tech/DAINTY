@@ -7,8 +7,13 @@ export default function OrderManager() {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const reloadOrders = () => {
-    getOrders().then(orders => setOrders([...orders].reverse())).catch(console.error);
+  const reloadOrders = async () => {
+    try {
+      const res = await getOrders();
+      setOrders(Array.isArray(res) ? [...res].reverse() : []);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -27,7 +32,7 @@ export default function OrderManager() {
   const handleStatusChange = async (orderId, newStatus) => {
     const updated = await updateOrderStatus(orderId, newStatus);
     if (updated) {
-      reloadOrders();
+      await reloadOrders();
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(updated);
       }

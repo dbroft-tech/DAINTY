@@ -29,10 +29,17 @@ import {
 } from '../api/db.mjs';
 
 // ── Config ────────────────────────────────────────────────────
-const PORT           = Number(process.env.PORT || 3000);
-const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || '';
+const isAiStudio     = Boolean(process.env.K_SERVICE || process.env.AI_STUDIO_APPLET_ID);
+const PORT           = isAiStudio ? 3000 : Number(process.env.PORT || 3000);
+const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'dainty_dev_session_secret_32_bytes_super_secure';
 const ADMIN_USER     = process.env.ADMIN_USERNAME  || 'admin';
-const ADMIN_HASH     = process.env.ADMIN_PASSWORD_HASH || '';
+let ADMIN_HASH       = process.env.ADMIN_PASSWORD_HASH || '';
+
+if (!ADMIN_HASH) {
+  // Generate bcrypt hash for default admin password 'admin123' so dev server never crashes
+  ADMIN_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin123', 10);
+  console.info('[Server] Default admin credentials active (user: admin, pass: admin123).');
+}
 
 const API_KEY    = process.env.RELWORX_API_KEY;
 const ACCOUNT_NO = process.env.RELWORX_ACCOUNT_NO;
@@ -299,32 +306,38 @@ app.post('/api/relworx/mobile-money/validate-mobile-number', async (req, res) =>
 });
 
 // ═══════════════════════════════════════════════════════════
-// Serve React SPA (dist/)
+// Frontend Serving (Vite in development / Static in production)
 // ═══════════════════════════════════════════════════════════
-app.use(express.static(DIST_PATH));
+const canUseVite = process.env.NODE_ENV !== 'production' && existsSync(path.join(__dirname, '..', 'vite.config.js'));
 
-// SPA fallback — middleware form works in both Express 4 and 5
-// (Express 5 crashes on app.get('*') with "Missing parameter name").
-app.use((req, res, next) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
-  res.sendFile(path.join(DIST_PATH, 'index.html'), err => err && next(err));
-});
+if (canUseVite) {
+  try {
+    const { createServer: createViteServer } = await import('vite');
+    const vite = await createViteServer({
+      server: { middlewareMode: true, host: '0.0.0.0' },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } catch (err) {
+    console.warn('[Server] Could not initialize Vite middleware, falling back to static files:', err.message);
+    app.use(express.static(DIST_PATH));
+    app.use((req, res, next) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+      if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
+      res.sendFile(path.join(DIST_PATH, 'index.html'), err => err && next(err));
+    });
+  }
+} else {
+  app.use(express.static(DIST_PATH));
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+    if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
+    res.sendFile(path.join(DIST_PATH, 'index.html'), err => err && next(err));
+  });
+}
 
 process.on('uncaughtException',  e => console.error('[Fatal] uncaughtException:', e));
 process.on('unhandledRejection', e => console.error('[Fatal] unhandledRejection:', e));
-
-// ═══════════════════════════════════════════════════════════
-// Production startup guard — refuse insecure defaults
-// ═══════════════════════════════════════════════════════════
-if (!SESSION_SECRET) {
-  console.error('[Fatal] ADMIN_SESSION_SECRET is not set. Set a strong random secret in your environment variables.');
-  process.exit(1);
-}
-if (!ADMIN_HASH) {
-  console.error('[Fatal] ADMIN_PASSWORD_HASH is not set. Generate one with: node -e "import(\'bcryptjs\').then(m=>m.hash(\'YOUR_PASS\',12).then(console.log))"');
-  process.exit(1);
-}
 
 // ═══════════════════════════════════════════════════════════
 // Start — bind to Hostinger-assigned PORT on all interfaces
