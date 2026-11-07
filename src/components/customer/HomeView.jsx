@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import HeroSlideshow from './HeroSlideshow';
 import ProductCard from './ProductCard';
 import CollectionCard from './CollectionCard';
@@ -16,23 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function HomeView({ onAddToBag }) {
-  const [allProducts, setAllProducts] = useState(() => {
-    const p = getProducts();
-    return Array.isArray(p) ? p : [];
-  });
-
-  useEffect(() => {
-    Promise.resolve(getProducts()).then(res => {
-      if (Array.isArray(res)) setAllProducts(res);
-    });
-
-    const handleUpdate = () => {
-      const p = getProducts();
-      if (Array.isArray(p)) setAllProducts(p);
-    };
-    window.addEventListener('storage', handleUpdate);
-    return () => window.removeEventListener('storage', handleUpdate);
-  }, []);
+  const allProducts = getProducts();
 
   // Curated collections matching the attached photo
   const featuredCollections = [
@@ -94,15 +77,13 @@ export default function HomeView({ onAddToBag }) {
     }
   ];
 
-  const safeProducts = Array.isArray(allProducts) ? allProducts : [];
-
   // New arrivals (first 4 items for 4-column desktop / 2-column mobile layout)
-  const newArrivals = safeProducts
+  const newArrivals = allProducts
     .filter(p => p.new_arrival)
     .slice(0, 4);
 
   // Best sellers (8 items for 4-column desktop x 2 rows / 2-column mobile x 4 rows)
-  const bestSellers = safeProducts
+  const bestSellers = allProducts
     .filter(p => p.best_seller)
     .slice(0, 8);
 
