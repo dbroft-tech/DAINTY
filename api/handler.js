@@ -23,6 +23,10 @@ function getDbProducts() {
 function saveDbProducts(products) {
   try {
     writeFileSync(PRODUCTS_DB_PATH, JSON.stringify(products, null, 2), 'utf-8');
+    const dataDirProducts = resolve(__dirname, '..', 'data', 'products.json');
+    if (existsSync(dirname(dataDirProducts))) {
+      writeFileSync(dataDirProducts, JSON.stringify(products, null, 2), 'utf-8');
+    }
     return true;
   } catch (err) {
     console.error('Error writing products_db.json:', err);
@@ -34,7 +38,7 @@ async function readJson(req) {
   let raw = '';
   for await (const chunk of req) {
     raw += chunk;
-    if (raw.length > 15_000_000) throw new Error('Request body too large');
+    if (raw.length > 50_000_000) throw new Error('Request body too large');
   }
   return raw ? JSON.parse(raw) : {};
 }

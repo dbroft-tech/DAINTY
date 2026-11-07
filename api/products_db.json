@@ -2,7 +2,7 @@
   {
     "id": "prod_1",
     "name": "18K Gold Plated Heart Pendant Necklace",
-    "description": "This elegant 18K Gold Plated Heart Pendant Necklace features a high-polished minimalist heart silhouette. Crafted with durability and timeless romance in mind, it is perfect for everyday elegance or a special evening. Gift it to a loved one or keep it as a symbol of self-love.",
+    "description": "Elegant 18K Gold Plated Heart Pendant Necklace featuring a high-polished minimalist heart silhouette. Crafted with durability and timeless romance in mind, perfect for everyday elegance or a special evening.",
     "price": 85000,
     "sale_price": 75000,
     "category_id": "necklaces",
@@ -18,23 +18,24 @@
     "best_seller": true,
     "limited_edition": false,
     "clearance": false,
-    "created_at": "2026-11-01T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "heart",
       "love",
       "gold chain",
       "pendant"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-11-02T03:47:42.446Z"
   },
   {
     "id": "prod_2",
     "name": "Eternal Promise Diamond Band",
-    "description": "A classic symbol of commitment, the Eternal Promise Diamond Band features a delicate layout of micro-pavé CZ crystals on a premium Sterling Silver ring body. Sleek, comfortable, and perfect for stacking or pairing with engagement rings.",
+    "description": "A classic symbol of commitment — micro-pavé CZ crystals on Sterling Silver. Perfect for stacking or pairing with engagement rings.",
     "price": 180000,
     "sale_price": null,
     "category_id": "rings",
@@ -50,23 +51,24 @@
     "best_seller": true,
     "limited_edition": false,
     "clearance": false,
-    "created_at": "2026-09-27T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "diamond",
       "promise",
       "wedding",
       "silver ring"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-09-28T03:47:42.446Z"
   },
   {
     "id": "prod_3",
     "name": "Classic Gold Hoop Earrings",
-    "description": "Every wardrobe needs a pair of standard gold hoops. These 18K Gold Plated hoops are lightweight, hollow, and feature a secure latch closure for comfortable, all-day everyday wear.",
+    "description": "18K Gold Plated lightweight hollow hoops with a secure latch closure. Comfortable all-day everyday wear.",
     "price": 48000,
     "sale_price": 39000,
     "category_id": "earrings",
@@ -82,22 +84,24 @@
     "best_seller": true,
     "limited_edition": false,
     "clearance": false,
-    "created_at": "2026-10-27T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "hoops",
       "everyday",
       "gold",
       "minimalist"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-10-28T03:47:42.446Z"
   },
   {
     "id": "prod_4",
     "name": "Baroque Pearl Choker Necklace",
-    "description": "Combining natural elegance with contemporary aesthetic, this choker features handpicked genuine freshwater baroque pearls mounted on a thick gold-plated stainless steel paperclip chain. Fully adjustable.",
+    "description": "Handpicked genuine freshwater baroque pearls on a gold-plated stainless steel paperclip chain. Fully adjustable.",
     "price": 120000,
     "sale_price": null,
     "category_id": "necklaces",
@@ -113,22 +117,24 @@
     "best_seller": false,
     "limited_edition": true,
     "clearance": false,
-    "created_at": "2026-10-25T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "pearl",
       "choker",
       "bridal",
       "baroque"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-10-26T03:47:42.447Z"
   },
   {
     "id": "prod_5",
     "name": "Premium Minimalist Gold Chronograph Watch",
-    "description": "An architectural marvel on the wrist, featuring a solid 316L Stainless Steel case finished with a premium gold-plated brush. Classic white dials, sapphire crystal face, and reliable Japanese Quartz movement.",
+    "description": "316L Stainless Steel case with premium gold-plated brush, classic white dials, sapphire crystal face, Japanese Quartz movement.",
     "price": 490000,
     "sale_price": 450000,
     "category_id": "watches",
@@ -144,22 +150,24 @@
     "best_seller": true,
     "limited_edition": true,
     "clearance": false,
-    "created_at": "2026-10-12T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "watch",
       "luxury",
       "men watch",
       "chronograph"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-10-13T03:47:42.447Z"
   },
   {
     "id": "prod_6",
     "name": "Gilded Intertwined Couple Ring Set",
-    "description": "Designed as a physical representation of two lives woven together, this couple ring set is crafted from high-polished gold-plated titanium. The male ring is robust and thick, while the female ring features an elegant braided band.",
+    "description": "High-polished gold-plated titanium. Robust thick male ring + elegant braided female ring. Perfect matching couples set.",
     "price": 135000,
     "sale_price": null,
     "category_id": "rings",
@@ -175,22 +183,24 @@
     "best_seller": false,
     "limited_edition": false,
     "clearance": false,
-    "created_at": "2026-11-03T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "couple ring",
       "promise ring",
       "wedding band",
       "matching"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-11-04T03:47:42.447Z"
   },
   {
     "id": "prod_7",
     "name": "Chunky Paperclip Gold Chain Bracelet",
-    "description": "Make a bold statement with this geometric paperclip link bracelet. Made from premium 18K gold-plated marine-grade stainless steel, this bracelet is water-resistant, tarnish-resistant, and highly durable.",
+    "description": "Premium 18K gold-plated marine-grade stainless steel paperclip link bracelet. Water-resistant & tarnish-resistant.",
     "price": 65000,
     "sale_price": 55000,
     "category_id": "bracelets",
@@ -206,22 +216,24 @@
     "best_seller": true,
     "limited_edition": false,
     "clearance": false,
-    "created_at": "2026-09-22T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "bracelet",
       "chain",
       "paperclip",
       "gold links"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-09-23T03:47:42.447Z"
   },
   {
     "id": "prod_8",
     "name": "Timeless Diamond & Sapphire Wedding Ring",
-    "description": "An exceptional custom masterpiece featuring a brilliant cushion-cut deep blue sapphire center, surrounded by a double halo of conflict-free diamonds in 18K solid white gold settings. Truly a luxury heirloom.",
+    "description": "Cushion-cut deep blue sapphire center, double halo of conflict-free diamonds in 18K solid white gold settings.",
     "price": 850000,
     "sale_price": null,
     "category_id": "rings",
@@ -237,22 +249,24 @@
     "best_seller": false,
     "limited_edition": true,
     "clearance": false,
-    "created_at": "2026-10-22T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "sapphire",
       "wedding ring",
       "diamonds",
       "luxury"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-10-23T03:47:42.447Z"
   },
   {
     "id": "prod_9",
     "name": "Sparkling Emerald Cut Ear Cuffs",
-    "description": "No piercings required! This single ear cuff slides onto your cartilage and fits securely. Set with stunning emerald-cut green cubic zirconia stones on yellow gold-plated brass.",
+    "description": "No piercings required! Slides onto cartilage. Emerald-cut green CZ stones on yellow gold-plated brass.",
     "price": 35000,
     "sale_price": 30000,
     "category_id": "earrings",
@@ -268,22 +282,24 @@
     "best_seller": false,
     "limited_edition": false,
     "clearance": true,
-    "created_at": "2026-11-04T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "ear cuff",
       "no piercing",
       "emerald",
       "gift under 50k"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-11-05T03:47:42.447Z"
   },
   {
     "id": "prod_10",
     "name": "Regal Velvet Jewelry Organizer Box",
-    "description": "Store your growing DAINTY collection in style. This luxury box features soft velvet drawer partitions, custom ring slots, necklace hooks, and a built-in lock with a gold-tone key.",
+    "description": "Soft velvet drawer partitions, custom ring slots, necklace hooks, and a built-in lock with gold-tone key.",
     "price": 150000,
     "sale_price": 130000,
     "category_id": "accessories",
@@ -299,16 +315,18 @@
     "best_seller": false,
     "limited_edition": false,
     "clearance": false,
-    "created_at": "2026-09-07T12:00:00.000Z",
-    "images": [
-      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80"
-    ],
     "tags": [
       "box",
       "organizer",
       "velvet",
       "storage"
-    ]
+    ],
+    "images": [
+      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80"
+    ],
+    "created_at": "2026-09-08T03:47:42.447Z"
   }
 ]

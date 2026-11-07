@@ -434,6 +434,42 @@ export async function compressImage(file, maxWidth = 1000, maxHeight = 1000, qua
   });
 }
 
+// Track deleted IDs so sync never accidentally restores deleted items
+function getDeletedProductIds() {
+  try {
+    const raw = localStorage.getItem(STORAGE_PREFIX + 'deleted_ids');
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function addDeletedProductId(id) {
+  if (!id) return;
+  try {
+    const set = getDeletedProductIds();
+    set.add(String(id));
+    localStorage.setItem(STORAGE_PREFIX + 'deleted_ids', JSON.stringify(Array.from(set)));
+  } catch {}
+}
+
+function removeDeletedProductId(id) {
+  if (!id) return;
+  try {
+    const set = getDeletedProductIds();
+    if (set.has(String(id))) {
+      set.delete(String(id));
+      localStorage.setItem(STORAGE_PREFIX + 'deleted_ids', JSON.stringify(Array.from(set)));
+    }
+  } catch {}
+}
+
+function clearDeletedProductIds() {
+  try {
+    localStorage.removeItem(STORAGE_PREFIX + 'deleted_ids');
+  } catch {}
+}
+
 function getStorageItem(key, defaultValue) {
   try {
     const item = localStorage.getItem(STORAGE_PREFIX + key);
@@ -460,17 +496,64 @@ let isServerSyncStarted = false;
 export async function syncProductsWithServer() {
   try {
     const res = await fetch('/api/products');
-    if (res.ok) {
-      const serverProducts = await res.json();
-      if (Array.isArray(serverProducts) && serverProducts.length > 0) {
-        localStorage.setItem(STORAGE_PREFIX + 'products', JSON.stringify(serverProducts));
-        window.dispatchEvent(new Event('storage'));
-        window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'sync', count: serverProducts.length } }));
+    if (!res.ok) return;
+
+    const serverProducts = await res.json();
+    if (!Array.isArray(serverProducts)) return;
+
+    const deletedIds = getDeletedProductIds();
+    // Exclude any products explicitly deleted by the admin
+    const validServerProducts = serverProducts.filter(p => p && p.id && !deletedIds.has(String(p.id)));
+
+    // Get current local products
+    const localProducts = getStorageItem('products', []);
+    const serverIdSet = new Set(validServerProducts.map(p => String(p.id)));
+
+    // Identify locally created products that the server doesn't have yet
+    const missingOnServer = [];
+    if (Array.isArray(localProducts)) {
+      for (const lp of localProducts) {
+        if (lp && lp.id && !deletedIds.has(String(lp.id)) && !serverIdSet.has(String(lp.id))) {
+          missingOnServer.push(lp);
+        }
       }
+    }
+
+    // Combine: local-first new items + valid server items
+    const merged = [...missingOnServer, ...validServerProducts];
+    merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+    // Save persistent merged list
+    localStorage.setItem(STORAGE_PREFIX + 'products', JSON.stringify(merged));
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'sync', count: merged.length } }));
+
+    // Send any local products that were missing on the server
+    for (const prod of missingOnServer) {
+      try {
+        await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(prod)
+        });
+      } catch {}
     }
   } catch (err) {
     console.warn('Server database sync idle:', err.message);
   }
+}
+
+// Background sync with /api/orders database
+export async function syncOrdersWithServer() {
+  try {
+    const res = await fetch('/api/orders');
+    if (res.ok) {
+      const serverOrders = await res.json();
+      if (Array.isArray(serverOrders) && serverOrders.length > 0) {
+        setStorageItem('orders', serverOrders);
+      }
+    }
+  } catch {}
 }
 
 // Initialization
@@ -497,6 +580,7 @@ export function initDB() {
   if (!isServerSyncStarted && typeof window !== 'undefined') {
     isServerSyncStarted = true;
     syncProductsWithServer();
+    syncOrdersWithServer();
   }
 }
 
@@ -505,7 +589,8 @@ export function getProducts() {
   initDB();
   const prods = getStorageItem('products', null);
   if (Array.isArray(prods)) {
-    return prods;
+    const deletedIds = getDeletedProductIds();
+    return prods.filter(p => p && p.id && !deletedIds.has(String(p.id)));
   }
   return defaultProducts;
 }
@@ -528,6 +613,7 @@ export function saveProduct(product) {
   }
 
   if (cleanProduct.id) {
+    removeDeletedProductId(cleanProduct.id);
     const idx = products.findIndex(p => p.id === cleanProduct.id);
     if (idx !== -1) {
       products[idx] = { ...products[idx], ...cleanProduct };
@@ -536,17 +622,22 @@ export function saveProduct(product) {
     }
   } else {
     cleanProduct.id = 'prod_' + Math.random().toString(36).substr(2, 9);
+    removeDeletedProductId(cleanProduct.id);
     products.unshift(cleanProduct); // Prepend to top so it's immediately visible
   }
 
-  // Persist locally
+  // Persist locally immediately
   setStorageItem('products', products);
 
-  // Persist to server database asynchronously
+  // Persist to server database
   fetch('/api/products', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(cleanProduct)
+  }).then(async res => {
+    if (!res.ok) {
+      console.warn('Server product POST returned status:', res.status);
+    }
   }).catch(err => {
     console.warn('Failed to persist product to server database:', err);
   });
@@ -555,15 +646,22 @@ export function saveProduct(product) {
 }
 
 export function deleteProduct(productId) {
+  if (!productId) return;
+  addDeletedProductId(productId);
+
   const products = getProducts();
   const filtered = products.filter(p => p.id !== productId);
   
-  // Persist locally
+  // Persist locally immediately
   setStorageItem('products', filtered);
 
-  // Persist to server database asynchronously
+  // Persist to server database
   fetch(`/api/products/${productId}`, {
     method: 'DELETE'
+  }).then(async res => {
+    if (!res.ok) {
+      console.warn('Server product DELETE returned status:', res.status);
+    }
   }).catch(err => {
     console.warn('Failed to delete product from server database:', err);
   });
@@ -606,8 +704,15 @@ export function saveOrder(orderData) {
     status: 'Pending',
     created_at: new Date().toISOString()
   };
-  orders.push(newOrder);
+  orders.unshift(newOrder);
   setStorageItem('orders', orders);
+
+  // Persist to server database
+  fetch('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newOrder)
+  }).catch(err => console.warn('Order server sync error:', err));
 
   // Reduce product stock
   const products = getProducts();
@@ -628,6 +733,11 @@ export function updateOrderStatus(orderId, status) {
   if (idx !== -1) {
     orders[idx].status = status;
     setStorageItem('orders', orders);
+    fetch(`/api/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).catch(() => {});
     return orders[idx];
   }
   return null;
@@ -650,6 +760,13 @@ export function saveMessage(chatId, sender, content) {
   };
   messages.push(newMessage);
   setStorageItem('messages', messages);
+
+  fetch('/api/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, sender, content })
+  }).catch(() => {});
+
   return newMessage;
 }
 
@@ -674,6 +791,7 @@ export function getChats() {
 
 // Reset Database Utility
 export function resetDatabase() {
+  clearDeletedProductIds();
   localStorage.removeItem(STORAGE_PREFIX + 'products');
   localStorage.removeItem(STORAGE_PREFIX + 'orders');
   localStorage.removeItem(STORAGE_PREFIX + 'messages');

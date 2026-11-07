@@ -25,17 +25,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Resolve a writable data directory.
 // On Hostinger shared hosting the project root may be read-only;
 // fall back to os.tmpdir() so the server can still start.
+// Resolve a writable data directory.
+// On Hostinger shared hosting the project root may be read-only or in versioned build directories;
+// we also maintain a persistent mirror in ~/dainty_data so product images and items survive redeployments.
 function resolveDataDir() {
   const candidates = [
+    process.env.DATA_DIR,
     join(__dirname, '..', 'data'),           // <project>/data  (preferred when in server/ or dist/)
+    join(process.cwd(), 'data'),             // <cwd>/data
     join(__dirname, 'data'),                 // <app_root>/data (when deployed from dist directly)
-    join(os.homedir(), 'dainty_data'),        // ~/dainty_data   (shared host home)
+    join(os.homedir(), 'dainty_data'),        // ~/dainty_data   (shared host persistent home)
     join(os.tmpdir(),  'dainty_data'),        // /tmp/dainty_data (last resort)
-  ];
+  ].filter(Boolean);
+
   for (const dir of candidates) {
     try {
       mkdirSync(dir, { recursive: true });
-      // Verify we can actually write
       const probe = join(dir, '.write_probe');
       writeFileSync(probe, '1', 'utf8');
       return dir;
@@ -45,18 +50,108 @@ function resolveDataDir() {
 }
 
 const DATA_DIR = resolveDataDir();
-console.info('[DB] Data directory:', DATA_DIR);
+console.info('[DB] Primary data directory:', DATA_DIR);
+
+// Persistent backup mirror directory in user's home folder (survives Hostinger version redeploys)
+const BACKUP_DIR = (function() {
+  try {
+    const homedir = os.homedir();
+    if (homedir) {
+      const p = join(homedir, 'dainty_data');
+      mkdirSync(p, { recursive: true });
+      const probe = join(p, '.write_probe');
+      writeFileSync(probe, '1', 'utf8');
+      return p;
+    }
+  } catch {}
+  return null;
+})();
+if (BACKUP_DIR && BACKUP_DIR !== DATA_DIR) {
+  console.info('[DB] Persistent backup mirror directory:', BACKUP_DIR);
+}
 
 // ── Atomic JSON helpers ──────────────────────────────────────
 function readJSON(file, fallback) {
-  const path = join(DATA_DIR, file);
-  if (!existsSync(path)) return fallback;
-  try { return JSON.parse(readFileSync(path, 'utf8')); }
-  catch { return fallback; }
+  const primaryPath = join(DATA_DIR, file);
+  let data = null;
+
+  if (existsSync(primaryPath)) {
+    try {
+      data = JSON.parse(readFileSync(primaryPath, 'utf8'));
+    } catch {}
+  }
+
+  // If primary is empty or missing, check persistent backup mirror
+  if ((!data || (Array.isArray(data) && data.length === 0)) && BACKUP_DIR) {
+    const backupPath = join(BACKUP_DIR, file);
+    if (existsSync(backupPath)) {
+      try {
+        const backupData = JSON.parse(readFileSync(backupPath, 'utf8'));
+        if (backupData && (!Array.isArray(backupData) || backupData.length > 0)) {
+          data = backupData;
+          // Sync backup forward to primary
+          try { writeFileSync(primaryPath, JSON.stringify(data, null, 2), 'utf8'); } catch {}
+        }
+      } catch {}
+    }
+  }
+
+  // Also check products_db.json for products
+  if (file === 'products.json' && (!data || (Array.isArray(data) && data.length <= 10))) {
+    const dbJsonPath = join(__dirname, 'products_db.json');
+    if (existsSync(dbJsonPath)) {
+      try {
+        const dbProducts = JSON.parse(readFileSync(dbJsonPath, 'utf8'));
+        if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+          if (!data || data.length === 0) {
+            data = dbProducts;
+          } else {
+            // Merge custom products
+            const map = new Map(data.map(p => [p.id, p]));
+            for (const p of dbProducts) {
+              if (p && p.id && !map.has(p.id)) {
+                map.set(p.id, p);
+              }
+            }
+            data = Array.from(map.values());
+          }
+        }
+      } catch {}
+    }
+  }
+
+  return data !== null ? data : fallback;
 }
 
 function writeJSON(file, data) {
-  writeFileSync(join(DATA_DIR, file), JSON.stringify(data, null, 2), 'utf8');
+  const content = JSON.stringify(data, null, 2);
+  
+  // 1. Write to primary DATA_DIR
+  try {
+    writeFileSync(join(DATA_DIR, file), content, 'utf8');
+  } catch (err) {
+    console.error(`[DB] Failed writing ${file} to ${DATA_DIR}:`, err.message);
+  }
+
+  // 2. Mirror to persistent BACKUP_DIR (survives Hostinger redeployments)
+  if (BACKUP_DIR && BACKUP_DIR !== DATA_DIR) {
+    try {
+      writeFileSync(join(BACKUP_DIR, file), content, 'utf8');
+    } catch {}
+  }
+
+  // 3. If products.json, also update api/products_db.json and cwd/data/products.json
+  if (file === 'products.json') {
+    try {
+      writeFileSync(join(__dirname, 'products_db.json'), content, 'utf8');
+    } catch {}
+    try {
+      const cwdData = join(process.cwd(), 'data', file);
+      if (cwdData !== join(DATA_DIR, file)) {
+        writeFileSync(cwdData, content, 'utf8');
+      }
+    } catch {}
+  }
 }
 
 // ── Tiny ID generator ────────────────────────────────────────
@@ -340,6 +435,24 @@ export function deleteProduct(id) {
   writeJSON('products.json', products);
 }
 
+export function saveProductsBatch(productsList) {
+  if (!Array.isArray(productsList) || productsList.length === 0) return getProducts();
+  const current = readJSON('products.json', []);
+  const map = new Map();
+  for (const p of current) {
+    if (p && p.id) map.set(p.id, p);
+  }
+  for (const p of productsList) {
+    if (p && p.id) {
+      const existing = map.get(p.id) || {};
+      map.set(p.id, { ...existing, ...p });
+    }
+  }
+  const merged = Array.from(map.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  writeJSON('products.json', merged);
+  return merged;
+}
+
 function adjustStock(productId, delta) {
   const products = readJSON('products.json', []);
   const idx = products.findIndex(p => p.id === productId);
@@ -458,9 +571,10 @@ export function getChats() {
 // ═══════════════════════════════════════════════════════════
 // Reset (Admin utility)
 // ═══════════════════════════════════════════════════════════
-export function resetDatabase() {
-  writeJSON('products.json', DEFAULT_PRODUCTS);
+export function resetDatabase(customProducts = null) {
+  const toSave = Array.isArray(customProducts) && customProducts.length > 0 ? customProducts : DEFAULT_PRODUCTS;
+  writeJSON('products.json', toSave);
   writeJSON('orders.json', []);
   writeJSON('messages.json', DEFAULT_MESSAGES);
-  console.info('[DB] Database reset to defaults.');
+  console.info('[DB] Database reset.');
 }
