@@ -97,9 +97,10 @@ export default function ProductManager() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you absolutely sure you want to delete this jewelry product from your store catalog?')) {
-      deleteProduct(id);
+      setProducts(prev => prev.filter(p => p.id !== id));
+      await deleteProduct(id);
       reloadProducts();
     }
   };

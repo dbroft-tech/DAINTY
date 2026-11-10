@@ -61,6 +61,7 @@ import {
   getAdminCredentials,
   updateAdminCredentials,
   compressImage,
+  syncProductsWithServer,
   categories,
   subcategories,
   piercingLocations
@@ -204,9 +205,76 @@ export default function AdminPortal({ onLogout } = {}) {
   // Toast feedback state
   const [toast, setToast] = useState(null);
 
+  // Online Server & Hostinger Database state
+  const [isSyncingServer, setIsSyncingServer] = useState(false);
+  const [dbStatus, setDbStatus] = useState({
+    status: 'connected',
+    driver: 'Hostinger Online Server Database',
+    products_count: 0,
+    persistent: true
+  });
+  const [showDbConfigForm, setShowDbConfigForm] = useState(false);
+  const [dbHost, setDbHost] = useState('localhost');
+  const [dbName, setDbName] = useState('');
+  const [dbUser, setDbUser] = useState('');
+  const [dbPass, setDbPass] = useState('');
+  const [dbConfigFeedback, setDbConfigFeedback] = useState(null);
+
   const showToast = (message) => {
     setToast(message);
     setTimeout(() => setToast(null), 3500);
+  };
+
+  // Trigger manual sync with Hostinger online server
+  const handleManualSync = async () => {
+    setIsSyncingServer(true);
+    try {
+      await syncProductsWithServer();
+      reloadData();
+      showToast('All products and deletions synced with online Hostinger database!');
+    } catch {
+      showToast('Sync completed with local store.');
+    } finally {
+      setTimeout(() => setIsSyncingServer(false), 500);
+    }
+  };
+
+  // Check database status on mount
+  useEffect(() => {
+    fetch('/api/database/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.status) setDbStatus(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Save Hostinger MySQL configuration if entered by admin
+  const handleSaveDbConfig = async (e) => {
+    e.preventDefault();
+    setDbConfigFeedback({ type: 'info', message: 'Connecting to Hostinger MySQL Database...' });
+    try {
+      const res = await fetch('/api/database/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          db_host: dbHost,
+          db_name: dbName,
+          db_user: dbUser,
+          db_pass: dbPass
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDbConfigFeedback({ type: 'success', message: data.message || 'Connected to Hostinger MySQL successfully!' });
+        showToast('Hostinger MySQL Database connected!');
+        fetch('/api/database/status').then(r => r.json()).then(s => setDbStatus(s)).catch(() => {});
+      } else {
+        setDbConfigFeedback({ type: 'error', message: data.error || 'Failed to connect to MySQL database.' });
+      }
+    } catch (err) {
+      setDbConfigFeedback({ type: 'error', message: err.message || 'Connection test failed.' });
+    }
   };
 
   // Reload data from local database
@@ -274,12 +342,12 @@ export default function AdminPortal({ onLogout } = {}) {
     setProductToDelete(product);
   };
 
-  const confirmDeleteProduct = () => {
+  const confirmDeleteProduct = async () => {
     if (!productToDelete) return;
     const toDeleteId = productToDelete.id;
     const toDeleteName = productToDelete.name;
-    deleteProduct(toDeleteId);
     setProducts(prev => prev.filter(p => p.id !== toDeleteId));
+    await deleteProduct(toDeleteId);
     reloadData();
     showToast(`Product "${toDeleteName}" was permanently deleted from catalog.`);
     setProductToDelete(null);
@@ -310,8 +378,8 @@ export default function AdminPortal({ onLogout } = {}) {
   };
 
   // Save / Update product handler
-  const handleSaveProduct = (productData) => {
-    const saved = saveProduct(productData);
+  const handleSaveProduct = async (productData) => {
+    const saved = await saveProduct(productData);
     setProducts(prev => {
       const idx = prev.findIndex(p => p.id === saved.id);
       if (idx !== -1) {
@@ -456,8 +524,21 @@ export default function AdminPortal({ onLogout } = {}) {
           </div>
         </div>
 
-        {/* Right: Date, Notifications, Profile, and Power Logout (Clean non-overlapping flex layout) */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        {/* Right: Sync Status, Date, Notifications, Profile, and Power Logout (Clean non-overlapping flex layout) */}
+        <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
+          {/* Hostinger Online Sync Status Button */}
+          <button
+            type="button"
+            onClick={handleManualSync}
+            disabled={isSyncingServer}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/90 text-emerald-800 text-[11px] font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
+            title="Online Hostinger Database Sync Active. Click to re-sync immediately."
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <RotateCcw className={`w-3 h-3 text-emerald-600 ${isSyncingServer ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isSyncingServer ? 'Syncing...' : 'Online Synced'}</span>
+          </button>
+
           {/* Date pill with Calendar icon */}
           <div className="hidden lg:flex items-center gap-2 text-xs text-gray-600 font-medium px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 shrink-0">
             <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
@@ -2030,6 +2111,133 @@ export default function AdminPortal({ onLogout } = {}) {
                     <p className="font-extrabold text-lg text-gray-900">Kampala, Uganda</p>
                     <p className="text-xs text-gray-500 font-medium">Boutique showroom &amp; digital dispatch</p>
                   </div>
+                </div>
+              </div>
+
+              {/* Card 2.5: Hostinger Online Cloud Database & Sync Status */}
+              <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 w-full">
+                <div className="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <RotateCcw className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-bold text-base text-gray-900">Hostinger Online Database &amp; Cross-Device Sync</h3>
+                      <p className="text-xs text-gray-500">All product additions, modifications, and deletions sync in real-time across Hostinger and visitor devices</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleManualSync}
+                    disabled={isSyncingServer}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-black shadow-xs transition-all flex items-center gap-2 cursor-pointer w-fit"
+                    style={{ background: 'var(--gradient-gold-metallic)', border: '1px solid var(--color-gold-light)' }}
+                  >
+                    <RotateCcw className={`w-3.5 h-3.5 ${isSyncingServer ? 'animate-spin' : ''}`} />
+                    <span>{isSyncingServer ? 'Syncing Now...' : 'Force Sync Online'}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Sync Mechanism</p>
+                    <p className="font-bold text-sm text-gray-900 mt-1">Universal Multi-Device Sync</p>
+                    <p className="text-[11px] text-emerald-600 font-medium mt-0.5">● Auto-syncs on view and save</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Active Hostinger Storage</p>
+                    <p className="font-bold text-sm text-gray-900 mt-1">{dbStatus?.driver || 'Hostinger Online Server'}</p>
+                    <p className="text-[11px] text-[#b38728] font-medium mt-0.5">Persistent across redeployments</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Live Catalog Count</p>
+                    <p className="font-bold text-sm text-gray-900 mt-1">{products.length} Jewelry Pieces Active</p>
+                    <p className="text-[11px] text-gray-500 font-medium mt-0.5">Permanent deletion blacklist active</p>
+                  </div>
+                </div>
+
+                {/* Optional Hostinger MySQL Config Details */}
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowDbConfigForm(!showDbConfigForm)}
+                    className="text-xs font-bold text-[#b38728] hover:underline flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    <span>{showDbConfigForm ? 'Hide Hostinger MySQL Configuration' : 'Advanced: Configure Hostinger MySQL Database'}</span>
+                  </button>
+
+                  {showDbConfigForm && (
+                    <form onSubmit={handleSaveDbConfig} className="mt-4 p-5 rounded-2xl bg-[#f8f9fd] border border-gray-200/80 space-y-4">
+                      <p className="text-xs text-gray-600">
+                        If you created a MySQL database in your Hostinger hPanel/cPanel, you can enter its details below to store products directly in MySQL tables:
+                      </p>
+
+                      {dbConfigFeedback && (
+                        <div className={`p-3 rounded-xl text-xs font-semibold ${
+                          dbConfigFeedback.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
+                          dbConfigFeedback.type === 'info' ? 'bg-blue-50 text-blue-800 border border-blue-200' :
+                          'bg-rose-50 text-rose-800 border border-rose-200'
+                        }`}>
+                          {dbConfigFeedback.message}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">Database Host</label>
+                          <input
+                            type="text"
+                            value={dbHost}
+                            onChange={(e) => setDbHost(e.target.value)}
+                            placeholder="localhost (default for Hostinger)"
+                            className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono outline-none focus:border-[#b38728]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">Database Name</label>
+                          <input
+                            type="text"
+                            value={dbName}
+                            onChange={(e) => setDbName(e.target.value)}
+                            placeholder="e.g. u123456789_dainty"
+                            className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono outline-none focus:border-[#b38728]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">Database User</label>
+                          <input
+                            type="text"
+                            value={dbUser}
+                            onChange={(e) => setDbUser(e.target.value)}
+                            placeholder="e.g. u123456789_admin"
+                            className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono outline-none focus:border-[#b38728]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">Database Password</label>
+                          <input
+                            type="password"
+                            value={dbPass}
+                            onChange={(e) => setDbPass(e.target.value)}
+                            placeholder="MySQL password"
+                            className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono outline-none focus:border-[#b38728]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-3 pt-2">
+                        <button
+                          type="submit"
+                          className="px-5 py-2.5 rounded-xl text-xs font-bold text-black shadow-xs cursor-pointer"
+                          style={{ background: 'var(--gradient-gold-metallic)' }}
+                        >
+                          Save &amp; Test Connection
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               </div>
 

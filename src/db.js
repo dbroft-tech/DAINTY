@@ -656,27 +656,44 @@ export function removeDeletedProductId(productId) {
 
 // Background sync with /api/products database
 let isServerSyncStarted = false;
+let lastSyncHash = '';
+
 export async function syncProductsWithServer() {
   try {
     const res = await fetch('/api/products');
-    if (res.ok) {
-      const serverProducts = await res.json();
-      if (Array.isArray(serverProducts)) {
-        const deletedSet = getDeletedProductIds();
-        
-        // Clean server products from any locally permanently deleted items
-        const cleanServer = serverProducts.filter(p => p && p.id && !deletedSet.has(p.id));
-        
-        // Retain any locally added products that might not have reached server yet
-        const localProds = getStorageItem('products', []);
-        const safeLocal = Array.isArray(localProds) ? localProds : [];
-        const serverIdSet = new Set(cleanServer.map(p => p.id));
-        const localOnly = safeLocal.filter(p => p && p.id && !serverIdSet.has(p.id) && !deletedSet.has(p.id));
+    if (!res.ok) {
+      console.warn('Server database sync responded with status:', res.status);
+      return;
+    }
 
-        const merged = [...localOnly, ...cleanServer];
-        setStorageItem('products', merged);
+    const serverProducts = await res.json();
+    if (Array.isArray(serverProducts)) {
+      const deletedSet = getDeletedProductIds();
+      
+      // Filter out any locally deleted products
+      const cleanServer = serverProducts.filter(p => p && p.id && !deletedSet.has(p.id));
+      
+      // Keep only newly drafted local items that are waiting for initial sync
+      const localProds = getStorageItem('products', []);
+      const safeLocal = Array.isArray(localProds) ? localProds : [];
+      const pendingLocal = safeLocal.filter(p => p && p.id && p._pendingSync === true && !deletedSet.has(p.id));
+
+      // Merge pending local items on top of authoritative server items
+      const serverIdSet = new Set(cleanServer.map(p => p.id));
+      const combined = [
+        ...pendingLocal.filter(p => !serverIdSet.has(p.id)),
+        ...cleanServer
+      ];
+
+      // Compare with previous state to avoid redundant renders
+      const currentJson = JSON.stringify(combined);
+      if (currentJson !== lastSyncHash) {
+        lastSyncHash = currentJson;
+        setStorageItem('products', combined);
         window.dispatchEvent(new Event('storage'));
-        window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'sync', count: merged.length } }));
+        window.dispatchEvent(new CustomEvent('dainty_products_changed', { 
+          detail: { action: 'sync', count: combined.length } 
+        }));
       }
     }
   } catch (err) {
@@ -707,10 +724,23 @@ export function initDB() {
     ]);
   }
 
-  // Trigger background server sync once on load
+  // Trigger background server sync once on load and on tab focus
   if (!isServerSyncStarted && typeof window !== 'undefined') {
     isServerSyncStarted = true;
     syncProductsWithServer();
+
+    // Re-sync when switching back to this tab/window
+    window.addEventListener('focus', () => syncProductsWithServer());
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) syncProductsWithServer();
+    });
+
+    // Background poll every 15 seconds to sync deletions/additions from other devices
+    setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        syncProductsWithServer();
+      }
+    }, 15000);
   }
 }
 
@@ -723,7 +753,7 @@ export function getProducts() {
   return base.filter(p => p && p.id && !deletedSet.has(p.id));
 }
 
-export function saveProduct(product) {
+export async function saveProduct(product) {
   const cleanProduct = { ...product };
 
   // If this product ID was previously in deleted blacklist, clear it
@@ -747,6 +777,8 @@ export function saveProduct(product) {
     cleanProduct.images = [cleanProduct.image || '/images/vi.jpeg'];
   }
 
+  cleanProduct._pendingSync = true;
+
   const products = [...getProducts()];
   const idx = products.findIndex(p => p.id === cleanProduct.id);
   if (idx !== -1) {
@@ -761,18 +793,30 @@ export function saveProduct(product) {
   window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'save', id: cleanProduct.id } }));
 
   // Persist to server database asynchronously
-  fetch('/api/products', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(cleanProduct)
-  }).catch(err => {
+  try {
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cleanProduct)
+    });
+    if (res.ok) {
+      cleanProduct._pendingSync = false;
+      const current = getStorageItem('products', []);
+      const cIdx = current.findIndex(p => p.id === cleanProduct.id);
+      if (cIdx !== -1) {
+        current[cIdx]._pendingSync = false;
+        setStorageItem('products', current);
+      }
+      await syncProductsWithServer();
+    }
+  } catch (err) {
     console.warn('Failed to persist product to server database:', err);
-  });
+  }
 
   return cleanProduct;
 }
 
-export function deleteProduct(productId) {
+export async function deleteProduct(productId) {
   if (!productId) return;
 
   // 1. Permanently register in deleted blacklist so it NEVER resurrects
@@ -788,12 +832,17 @@ export function deleteProduct(productId) {
   window.dispatchEvent(new Event('storage'));
   window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'delete', id: productId } }));
 
-  // 4. Persist deletion to server database asynchronously
-  fetch(`/api/products/${productId}`, {
-    method: 'DELETE'
-  }).catch(err => {
+  // 4. Persist deletion to server database and trigger re-sync
+  try {
+    const res = await fetch(`/api/products/${productId}`, {
+      method: 'DELETE'
+    });
+    if (res.ok) {
+      await syncProductsWithServer();
+    }
+  } catch (err) {
     console.warn('Failed to delete product from server database:', err);
-  });
+  }
 }
 
 export function updateProductPrice(productId, newPrice, newSalePrice = null) {

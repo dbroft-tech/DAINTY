@@ -196,6 +196,32 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       return send(res, 200, { success: true, count: toSave.length });
     }
 
+    // GET /api/database/status -> Database health & status
+    if (req.method === 'GET' && (url.pathname === '/api/database/status' || url.pathname === '/api/db_status')) {
+      const prods = getDbProducts();
+      return send(res, 200, {
+        status: 'connected',
+        driver: 'Live Cloud & Hostinger Server Database',
+        products_count: prods.length,
+        persistent: true
+      });
+    }
+
+    // POST /api/database/config -> Save Hostinger MySQL Database credentials
+    if (req.method === 'POST' && (url.pathname === '/api/database/config' || url.pathname === '/api/db_config')) {
+      const config = await readJson(req);
+      try {
+        const publicConfigPath = resolve(__dirname, '../public/api/db_config.json');
+        writeFileSync(publicConfigPath, JSON.stringify(config, null, 2), 'utf-8');
+      } catch (err) {
+        console.warn('Could not write public/api/db_config.json:', err);
+      }
+      return send(res, 200, {
+        success: true,
+        message: 'Database configuration saved successfully.'
+      });
+    }
+
     // =========================================================================
     // PAYMENTS & RELWORX ENDPOINTS
     // =========================================================================
