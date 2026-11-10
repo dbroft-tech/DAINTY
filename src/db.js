@@ -414,9 +414,9 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      '/images/stud_vii_marquise_cluster_stud.jpeg',
       '/images/vii.jpeg',
-      '/images/hero_home_earrings.png'
+      '/images/0.jpeg',
+      '/images/vi.jpeg'
     ],
     tags: ['stud', 'marquise', 'dainty studs', 'piercing', 'gold']
   },
@@ -441,9 +441,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      '/images/stud_v_gold_draped_chain_ring.jpeg',
       '/images/v.jpeg',
-      '/images/stud_iv_gold_chain_ring.jpeg'
+      '/images/iv.jpeg'
     ],
     tags: ['chain', 'chains', 'drape', 'piercing', 'septum']
   },
@@ -468,9 +467,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      '/images/stud_iii_gold_pave_clicker.jpeg',
       '/images/iii.jpeg',
-      '/images/stud_ii_diamond_eternity_ring.jpeg'
+      '/images/ii.jpeg'
     ],
     tags: ['pave', 'clicker', 'hoop', 'dainty studs', 'gold']
   },
@@ -495,9 +493,9 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      '/images/stud_viii_luxury_earring_curation_set.jpeg',
-      '/images/viii.jpeg',
-      '/images/hero_home_luxury.png'
+      '/images/iv.jpeg',
+      '/images/v.jpeg',
+      '/images/vi.jpeg'
     ],
     tags: ['ear stack', 'curation set', 'gift set', 'studs']
   },
@@ -522,9 +520,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      '/images/stud_vi_gold_flatback_labret.jpeg',
       '/images/vi.jpeg',
-      '/images/stud_0_silver_flatback.jpeg'
+      '/images/0.jpeg'
     ],
     tags: ['flat back', 'labret', 'stud', 'dainty studs', 'piercing']
   },
@@ -549,7 +546,6 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      '/images/stud_i_gold_open_ring.jpeg',
       '/images/i.jpeg'
     ],
     tags: ['open ring', 'minimalist', 'cartilage', 'septum']

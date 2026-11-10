@@ -5,54 +5,92 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const PRODUCTS_DB_PATH = resolve(__dirname, 'products_db.json');
-const DELETED_IDS_PATH = resolve(__dirname, 'deleted_ids.json');
+const POSSIBLE_PERSISTENT_DIRS = [
+  process.env.DATA_DIR,
+  '/home/u111258626/domains/daintystudsandchains.com/dainty_data',
+  resolve(__dirname, '../data'),
+  resolve(__dirname, '../../dainty_data'),
+  resolve(__dirname, 'data'),
+  __dirname
+].filter(Boolean);
 
-// Helper to read and write database
+function getFilePath(filename) {
+  // First check if persistent directory already has the file
+  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
+    try {
+      if (existsSync(dir)) {
+        const candidate = resolve(dir, filename);
+        if (existsSync(candidate)) return candidate;
+      }
+    } catch {}
+  }
+  return resolve(__dirname, filename);
+}
+
+const PRODUCTS_DB_PATH = getFilePath('products_db.json');
+const DELETED_IDS_PATH = getFilePath('deleted_ids.json');
+
+// Helper to read and write database with persistent mirroring
 function getDeletedIds() {
-  try {
-    if (existsSync(DELETED_IDS_PATH)) {
-      const content = readFileSync(DELETED_IDS_PATH, 'utf-8');
-      return JSON.parse(content);
-    }
-  } catch (err) {
-    console.error('Error reading deleted_ids.json:', err);
+  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
+    try {
+      if (existsSync(dir)) {
+        const target = resolve(dir, 'deleted_ids.json');
+        if (existsSync(target)) {
+          const content = readFileSync(target, 'utf-8');
+          return JSON.parse(content);
+        }
+      }
+    } catch {}
   }
   return [];
 }
 
 function saveDeletedIds(ids) {
-  try {
-    writeFileSync(DELETED_IDS_PATH, JSON.stringify(ids, null, 2), 'utf-8');
-    return true;
-  } catch (err) {
-    console.error('Error writing deleted_ids.json:', err);
-    return false;
+  let saved = false;
+  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
+    try {
+      if (existsSync(dir)) {
+        const target = resolve(dir, 'deleted_ids.json');
+        writeFileSync(target, JSON.stringify(ids, null, 2), 'utf-8');
+        saved = true;
+      }
+    } catch {}
   }
+  return saved;
 }
 
 function getDbProducts() {
-  try {
-    if (existsSync(PRODUCTS_DB_PATH)) {
-      const content = readFileSync(PRODUCTS_DB_PATH, 'utf-8');
-      const all = JSON.parse(content);
-      const deletedSet = new Set(getDeletedIds());
-      return all.filter(p => !deletedSet.has(p.id));
-    }
-  } catch (err) {
-    console.error('Error reading products_db.json:', err);
+  const deletedSet = new Set(getDeletedIds());
+  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
+    try {
+      if (existsSync(dir)) {
+        const target = resolve(dir, 'products_db.json');
+        if (existsSync(target)) {
+          const content = readFileSync(target, 'utf-8');
+          const all = JSON.parse(content);
+          if (Array.isArray(all)) {
+            return all.filter(p => p && p.id && !deletedSet.has(p.id));
+          }
+        }
+      }
+    } catch {}
   }
   return [];
 }
 
 function saveDbProducts(products) {
-  try {
-    writeFileSync(PRODUCTS_DB_PATH, JSON.stringify(products, null, 2), 'utf-8');
-    return true;
-  } catch (err) {
-    console.error('Error writing products_db.json:', err);
-    return false;
+  let saved = false;
+  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
+    try {
+      if (existsSync(dir)) {
+        const target = resolve(dir, 'products_db.json');
+        writeFileSync(target, JSON.stringify(products, null, 2), 'utf-8');
+        saved = true;
+      }
+    } catch {}
   }
+  return saved;
 }
 
 async function readJson(req) {

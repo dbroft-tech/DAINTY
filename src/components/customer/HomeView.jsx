@@ -328,7 +328,7 @@ export default function HomeView({ onAddToBag }) {
               <img src="/images/vii.jpeg" alt="Marquise cluster stud" />
             </div>
             <div className="dainty-ig-item">
-              <img src="/images/viii.jpeg" alt="Curated earring stack" />
+              <img src="/images/iii.jpeg" alt="Curated earring stack" />
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>

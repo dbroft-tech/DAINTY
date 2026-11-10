@@ -109,8 +109,7 @@ const STUDIO_IMAGE_PRESETS = [
   { label: 'Pavé Clicker', url: '/images/iii.jpeg' },
   { label: 'Ring & Chain', url: '/images/iv.jpeg' },
   { label: 'Chain Drape Ring', url: '/images/v.jpeg' },
-  { label: 'Marquise Cluster', url: '/images/vii.jpeg' },
-  { label: 'Earring Set', url: '/images/viii.jpeg' }
+  { label: 'Marquise Cluster', url: '/images/vii.jpeg' }
 ];
 
 // Custom Tooltip for Spline Chart (Matches dark floating tooltip in five.webp)

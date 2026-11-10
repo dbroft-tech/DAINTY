@@ -17,7 +17,7 @@ const slidesConfig = {
       description: 'Comfortable flat-back labrets and sparkling multi-stone studs.'
     },
     {
-      image: '/images/viii.jpeg',
+      image: '/images/vii.jpeg',
       subtitle: 'CURATED EAR STACKS',
       title: 'Mix, Match & Stack Your Piercings',
       description: 'Handpicked suites of huggies, clickers, and dainty studs.'
@@ -65,7 +65,7 @@ const slidesConfig = {
   ],
   collections: [
     {
-      image: '/images/viii.jpeg',
+      image: '/images/vii.jpeg',
       subtitle: '💎 DAINTY CURATIONS',
       title: 'Studs & Chain Suites',
       description: 'Complete 3-pair matching ear stack sets.'
