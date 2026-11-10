@@ -14,7 +14,7 @@
  * ============================================================
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, accessSync, constants } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHmac, randomBytes } from 'node:crypto';

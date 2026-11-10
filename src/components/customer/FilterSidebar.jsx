@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { X, Filter, RotateCcw } from 'lucide-react';
+import { Filter, RotateCcw } from 'lucide-react';
 import { subcategories } from '../../db';
 
 export const materialOptions = [

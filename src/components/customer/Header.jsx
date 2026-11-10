@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, ChevronDown, ChevronRight, ChevronLeft, Heart, Lock, X } from 'lucide-react';
+import { ShoppingBag, ChevronDown, ChevronRight, ChevronLeft, Heart, Lock } from 'lucide-react';
 import { navigateTo, goBack } from '../../Router';
 import { categories } from '../../db';
 

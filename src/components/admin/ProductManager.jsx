@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, X, AlertTriangle, Upload } from 'lucide-react';
-import { getProducts, saveProduct, deleteProduct, categories, subcategories } from '../../db';
+import { Plus, Edit2, Trash2, X, Upload } from 'lucide-react';
+import { getProducts, saveProduct, deleteProduct, subcategories } from '../../db';
 import { formatUGX } from '../customer/ProductCard';
 
 export default function ProductManager() {

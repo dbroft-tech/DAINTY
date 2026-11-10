@@ -660,41 +660,76 @@ let lastSyncHash = '';
 
 export async function syncProductsWithServer() {
   try {
-    const res = await fetch('/api/products');
-    if (!res.ok) {
-      console.warn('Server database sync responded with status:', res.status);
-      return;
+    // Parallel fetch: deleted blacklist + active products for seamless multi-device sync
+    const [deletedRes, productsRes] = await Promise.all([
+      fetch('/api/deleted-ids', { cache: 'no-store' }).catch(() => null),
+      fetch('/api/products', { cache: 'no-store' }).catch(() => null)
+    ]);
+
+    // 1. Sync deleted blacklist from server
+    let currentDeletedIds = getStorageItem('deleted_product_ids', []);
+    if (!Array.isArray(currentDeletedIds)) currentDeletedIds = [];
+    let deletedListChanged = false;
+
+    if (deletedRes && deletedRes.ok) {
+      try {
+        const serverDeleted = await deletedRes.json();
+        if (Array.isArray(serverDeleted) && serverDeleted.length > 0) {
+          const mergedSet = new Set([...currentDeletedIds, ...serverDeleted]);
+          if (mergedSet.size !== currentDeletedIds.length) {
+            currentDeletedIds = Array.from(mergedSet);
+            setStorageItem('deleted_product_ids', currentDeletedIds);
+            deletedListChanged = true;
+          }
+        }
+      } catch (e) {
+        console.warn('Error parsing server deleted IDs:', e);
+      }
     }
 
-    const serverProducts = await res.json();
-    if (Array.isArray(serverProducts)) {
-      const deletedSet = getDeletedProductIds();
-      
-      // Filter out any locally deleted products
-      const cleanServer = serverProducts.filter(p => p && p.id && !deletedSet.has(p.id));
-      
-      // Keep only newly drafted local items that are waiting for initial sync
-      const localProds = getStorageItem('products', []);
-      const safeLocal = Array.isArray(localProds) ? localProds : [];
-      const pendingLocal = safeLocal.filter(p => p && p.id && p._pendingSync === true && !deletedSet.has(p.id));
+    const deletedSet = new Set(currentDeletedIds);
 
-      // Merge pending local items on top of authoritative server items
-      const serverIdSet = new Set(cleanServer.map(p => p.id));
-      const combined = [
-        ...pendingLocal.filter(p => !serverIdSet.has(p.id)),
-        ...cleanServer
-      ];
+    // 2. Sync products from server
+    if (productsRes && productsRes.ok) {
+      const serverProducts = await productsRes.json();
+      if (Array.isArray(serverProducts)) {
+        // Filter out any deleted products using full server+local blacklist
+        const cleanServer = serverProducts.filter(p => p && p.id && !deletedSet.has(p.id));
 
-      // Compare with previous state to avoid redundant renders
-      const currentJson = JSON.stringify(combined);
-      if (currentJson !== lastSyncHash) {
-        lastSyncHash = currentJson;
-        setStorageItem('products', combined);
-        window.dispatchEvent(new Event('storage'));
-        window.dispatchEvent(new CustomEvent('dainty_products_changed', { 
-          detail: { action: 'sync', count: combined.length } 
-        }));
+        // Keep local pending items that are not deleted
+        const localProds = getStorageItem('products', []);
+        const safeLocal = Array.isArray(localProds) ? localProds : [];
+        const pendingLocal = safeLocal.filter(p => p && p.id && p._pendingSync === true && !deletedSet.has(p.id));
+
+        const serverIdSet = new Set(cleanServer.map(p => p.id));
+        const combined = [
+          ...pendingLocal.filter(p => !serverIdSet.has(p.id)),
+          ...cleanServer
+        ];
+
+        const currentJson = JSON.stringify(combined);
+        if (currentJson !== lastSyncHash || deletedListChanged) {
+          lastSyncHash = currentJson;
+          setStorageItem('products', combined);
+          window.dispatchEvent(new Event('storage'));
+          window.dispatchEvent(new CustomEvent('dainty_products_changed', { 
+            detail: { action: 'sync', count: combined.length } 
+          }));
+        }
+        return;
       }
+    }
+
+    // Fallback: If products fetch was idle but deleted IDs changed, prune local products immediately
+    if (deletedListChanged) {
+      const localProds = getStorageItem('products', defaultProducts);
+      const safeLocal = Array.isArray(localProds) ? localProds : defaultProducts;
+      const pruned = safeLocal.filter(p => p && p.id && !deletedSet.has(p.id));
+      setStorageItem('products', pruned);
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('dainty_products_changed', { 
+        detail: { action: 'sync_prune', count: pruned.length } 
+      }));
     }
   } catch (err) {
     console.warn('Server database sync idle:', err.message);
@@ -724,23 +759,23 @@ export function initDB() {
     ]);
   }
 
-  // Trigger background server sync once on load and on tab focus
+  // Trigger background server sync once on load, on tab focus, and polling interval
   if (!isServerSyncStarted && typeof window !== 'undefined') {
     isServerSyncStarted = true;
     syncProductsWithServer();
 
-    // Re-sync when switching back to this tab/window
+    // Re-sync immediately when user focuses the tab or switches back to browser
     window.addEventListener('focus', () => syncProductsWithServer());
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) syncProductsWithServer();
     });
 
-    // Background poll every 15 seconds to sync deletions/additions from other devices
+    // Background poll every 3 seconds to sync deletions/additions from other devices instantly
     setInterval(() => {
       if (typeof document !== 'undefined' && !document.hidden) {
         syncProductsWithServer();
       }
-    }, 15000);
+    }, 3000);
   }
 }
 
@@ -819,7 +854,7 @@ export async function saveProduct(product) {
 export async function deleteProduct(productId) {
   if (!productId) return;
 
-  // 1. Permanently register in deleted blacklist so it NEVER resurrects
+  // 1. Permanently register in deleted blacklist so it NEVER resurrects locally
   addDeletedProductId(productId);
 
   // 2. Immediately remove from local products array
@@ -828,18 +863,39 @@ export async function deleteProduct(productId) {
   const filtered = safeCurrent.filter(p => p && p.id !== productId);
   setStorageItem('products', filtered);
 
-  // 3. Immediately emit change events across components and tabs
+  // 3. Immediately emit change events across all components, tabs, and listeners
   window.dispatchEvent(new Event('storage'));
   window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'delete', id: productId } }));
 
-  // 4. Persist deletion to server database and trigger re-sync
+  // 4. Persist deletion to server database: try DELETE first, fallback to POST /api/products/delete
   try {
-    const res = await fetch(`/api/products/${productId}`, {
-      method: 'DELETE'
-    });
-    if (res.ok) {
-      await syncProductsWithServer();
+    let synced = false;
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res && res.ok) synced = true;
+    } catch {
+      // Fall through to POST fallback below
     }
+
+    // Secondary guarantee: POST /api/products/delete (ensures hosts/proxies that drop HTTP DELETE still sync)
+    if (!synced) {
+      try {
+        const postRes = await fetch('/api/products/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: productId })
+        });
+        if (postRes && postRes.ok) synced = true;
+      } catch (err) {
+        console.warn('POST delete fallback failed:', err);
+      }
+    }
+
+    // Trigger full multi-device sync
+    await syncProductsWithServer();
   } catch (err) {
     console.warn('Failed to delete product from server database:', err);
   }

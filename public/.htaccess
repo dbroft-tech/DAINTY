@@ -7,8 +7,12 @@
   RewriteBase /
 
   # 1. Route API requests to PHP handler
-  RewriteRule ^api/products/([a-zA-Z0-9_\-]+)/?$ api/index.php?endpoint=products&id=$1 [QSA,L]
+  RewriteRule ^api/deleted-ids/?$ api/index.php?endpoint=deleted_ids [QSA,L]
+  RewriteRule ^api/products/deleted-ids/?$ api/index.php?endpoint=deleted_ids [QSA,L]
+  RewriteRule ^api/products/delete/?$ api/index.php?endpoint=products_delete [QSA,L]
   RewriteRule ^api/products/reset/?$ api/index.php?endpoint=reset [QSA,L]
+  RewriteRule ^api/products/([a-zA-Z0-9_\-]+)/delete/?$ api/index.php?endpoint=products_delete&id=$1 [QSA,L]
+  RewriteRule ^api/products/([a-zA-Z0-9_\-]+)/?$ api/index.php?endpoint=products&id=$1 [QSA,L]
   RewriteRule ^api/products/?$ api/index.php?endpoint=products [QSA,L]
   RewriteRule ^api/database/config/?$ api/index.php?endpoint=db_config [QSA,L]
   RewriteRule ^api/database/status/?$ api/index.php?endpoint=db_status [QSA,L]

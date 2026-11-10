@@ -222,6 +222,56 @@ if (($endpoint === 'db_config' || $endpoint === 'database/config') && $method ==
 }
 
 // -----------------------------------------------------------------------------
+// ROUTE: GET Deleted IDs (Cross-Device Blacklist Sync)
+// -----------------------------------------------------------------------------
+if (($endpoint === 'deleted_ids' || $endpoint === 'deleted-ids') && $method === 'GET') {
+    if ($pdo) {
+        $stmt = $pdo->query("SELECT id FROM dainty_deleted_ids");
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        echo json_encode(array_values(array_unique($ids)));
+    } else {
+        $deleted = getFileDeletedIds($deletedIdsFile);
+        echo json_encode(array_values(array_unique($deleted)));
+    }
+    exit;
+}
+
+// -----------------------------------------------------------------------------
+// ROUTE: POST Delete Product (Fallback to avoid HTTP DELETE method blocks)
+// -----------------------------------------------------------------------------
+if (($endpoint === 'products_delete' || $endpoint === 'products/delete') && $method === 'POST') {
+    $delId = trim($body['id'] ?? $body['productId'] ?? $id);
+    if (empty($delId)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Product ID is required for deletion.']);
+        exit;
+    }
+    if ($pdo) {
+        $insDel = $pdo->prepare("INSERT IGNORE INTO dainty_deleted_ids (id) VALUES (:id)");
+        $insDel->execute([':id' => $delId]);
+        $delStmt = $pdo->prepare("DELETE FROM dainty_products WHERE id = :id");
+        $delStmt->execute([':id' => $delId]);
+    } else {
+        $deleted = getFileDeletedIds($deletedIdsFile);
+        if (!in_array($delId, $deleted)) {
+            $deleted[] = $delId;
+            saveFileDeletedIds($deletedIdsFile, $deleted);
+        }
+        $all = getFileProducts($productsDbFile, $deletedIdsFile);
+        $filtered = array_values(array_filter($all, function($p) use ($delId) {
+            return ($p['id'] ?? '') !== $delId;
+        }));
+        saveFileProducts($productsDbFile, $filtered);
+    }
+    echo json_encode([
+        'success' => true,
+        'deletedId' => $delId,
+        'message' => "Product {$delId} permanently deleted."
+    ]);
+    exit;
+}
+
+// -----------------------------------------------------------------------------
 // ROUTE: GET Products
 // -----------------------------------------------------------------------------
 if ($endpoint === 'products' && $method === 'GET') {

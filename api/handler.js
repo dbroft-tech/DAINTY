@@ -201,6 +201,11 @@ export async function handleApiRequest(req, res, customEnv = {}) {
     // PRODUCTS DATABASE REST ENDPOINTS (GET, POST, PUT, DELETE, RESET)
     // =========================================================================
     
+    // GET /api/deleted-ids -> Retrieve all deleted product IDs for multi-device sync
+    if (req.method === 'GET' && (pathname === '/api/deleted-ids' || pathname === '/api/products/deleted-ids')) {
+      return send(res, 200, getDeletedIds());
+    }
+
     // GET /api/products -> Retrieve all stored products
     if (req.method === 'GET' && pathname === '/api/products') {
       const products = getDbProducts();
@@ -218,10 +223,39 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       return send(res, 404, { error: `Product ${productId} not found.` });
     }
 
+    // POST /api/products/delete -> Robust deletion via POST (avoids proxy/firewall method blocks)
+    if (req.method === 'POST' && (pathname === '/api/products/delete' || pathname === '/api/delete-product')) {
+      const payload = await readJson(req);
+      const productId = (payload?.id || payload?.productId || '').trim();
+      if (!productId) {
+        return send(res, 400, { error: 'Product ID required in JSON body.' });
+      }
+      const deletedIds = getDeletedIds();
+      if (!deletedIds.includes(productId)) {
+        deletedIds.push(productId);
+        saveDeletedIds(deletedIds);
+      }
+      const products = getDbProducts();
+      const filtered = products.filter(p => p.id !== productId);
+      saveDbProducts(filtered);
+      return send(res, 200, { success: true, deletedId: productId, count: filtered.length });
+    }
+
     // POST or PUT /api/products or /api/products/:id -> Create or update product
     if ((req.method === 'POST' || req.method === 'PUT') && (pathname === '/api/products' || pathname.startsWith('/api/products/'))) {
-      if (pathname === '/api/products/reset') {
-        // Fall through to reset handler below
+      if (pathname === '/api/products/reset' || pathname === '/api/products/delete') {
+        // Fall through to specific handlers
+      } else if (pathname.endsWith('/delete')) {
+        const productId = pathname.replace('/api/products/', '').replace('/delete', '').trim();
+        const deletedIds = getDeletedIds();
+        if (productId && !deletedIds.includes(productId)) {
+          deletedIds.push(productId);
+          saveDeletedIds(deletedIds);
+        }
+        const products = getDbProducts();
+        const filtered = products.filter(p => p.id !== productId);
+        saveDbProducts(filtered);
+        return send(res, 200, { success: true, deletedId: productId, count: filtered.length });
       } else {
         const product = await readJson(req);
         if (!product || (!product.name && !product.title)) {
