@@ -6,13 +6,38 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PRODUCTS_DB_PATH = resolve(__dirname, 'products_db.json');
+const DELETED_IDS_PATH = resolve(__dirname, 'deleted_ids.json');
 
 // Helper to read and write database
+function getDeletedIds() {
+  try {
+    if (existsSync(DELETED_IDS_PATH)) {
+      const content = readFileSync(DELETED_IDS_PATH, 'utf-8');
+      return JSON.parse(content);
+    }
+  } catch (err) {
+    console.error('Error reading deleted_ids.json:', err);
+  }
+  return [];
+}
+
+function saveDeletedIds(ids) {
+  try {
+    writeFileSync(DELETED_IDS_PATH, JSON.stringify(ids, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('Error writing deleted_ids.json:', err);
+    return false;
+  }
+}
+
 function getDbProducts() {
   try {
     if (existsSync(PRODUCTS_DB_PATH)) {
       const content = readFileSync(PRODUCTS_DB_PATH, 'utf-8');
-      return JSON.parse(content);
+      const all = JSON.parse(content);
+      const deletedSet = new Set(getDeletedIds());
+      return all.filter(p => !deletedSet.has(p.id));
     }
   } catch (err) {
     console.error('Error reading products_db.json:', err);
@@ -23,10 +48,6 @@ function getDbProducts() {
 function saveDbProducts(products) {
   try {
     writeFileSync(PRODUCTS_DB_PATH, JSON.stringify(products, null, 2), 'utf-8');
-    const dataDirProducts = resolve(__dirname, '..', 'data', 'products.json');
-    if (existsSync(dirname(dataDirProducts))) {
-      writeFileSync(dataDirProducts, JSON.stringify(products, null, 2), 'utf-8');
-    }
     return true;
   } catch (err) {
     console.error('Error writing products_db.json:', err);
@@ -38,7 +59,7 @@ async function readJson(req) {
   let raw = '';
   for await (const chunk of req) {
     raw += chunk;
-    if (raw.length > 50_000_000) throw new Error('Request body too large');
+    if (raw.length > 15_000_000) throw new Error('Request body too large');
   }
   return raw ? JSON.parse(raw) : {};
 }
@@ -123,18 +144,22 @@ export async function handleApiRequest(req, res, customEnv = {}) {
         return send(res, 400, { error: 'Product name is required.' });
       }
 
-      const products = getDbProducts();
       if (product.id) {
-        const idx = products.findIndex(p => p.id === product.id);
-        if (idx !== -1) {
-          products[idx] = { ...products[idx], ...product };
-        } else {
-          // Prepend so new items appear first
-          products.unshift(product);
+        const deletedIds = getDeletedIds();
+        if (deletedIds.includes(product.id)) {
+          saveDeletedIds(deletedIds.filter(id => id !== product.id));
         }
       } else {
         product.id = 'prod_' + Math.random().toString(36).substr(2, 9);
         product.created_at = new Date().toISOString();
+      }
+
+      const products = getDbProducts();
+      const idx = products.findIndex(p => p.id === product.id);
+      if (idx !== -1) {
+        products[idx] = { ...products[idx], ...product };
+      } else {
+        // Prepend so new items appear first
         products.unshift(product);
       }
 
@@ -142,12 +167,20 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       return send(res, 200, product);
     }
 
-    // DELETE /api/products/:id -> Delete a product by ID
+    // DELETE /api/products/:id -> Delete a product by ID permanently
     if (req.method === 'DELETE' && url.pathname.startsWith('/api/products/')) {
       const productId = url.pathname.replace('/api/products/', '').trim();
       if (!productId) {
         return send(res, 400, { error: 'Product ID required' });
       }
+      
+      // Add to deleted IDs blacklist
+      const deletedIds = getDeletedIds();
+      if (!deletedIds.includes(productId)) {
+        deletedIds.push(productId);
+        saveDeletedIds(deletedIds);
+      }
+
       const products = getDbProducts();
       const filtered = products.filter(p => p.id !== productId);
       saveDbProducts(filtered);
@@ -157,6 +190,7 @@ export async function handleApiRequest(req, res, customEnv = {}) {
     // POST /api/products/reset -> Reset database
     if (req.method === 'POST' && url.pathname === '/api/products/reset') {
       const resetProducts = await readJson(req);
+      saveDeletedIds([]); // Clear deleted blacklist on explicit reset
       const toSave = Array.isArray(resetProducts) && resetProducts.length > 0 ? resetProducts : getDbProducts();
       saveDbProducts(toSave);
       return send(res, 200, { success: true, count: toSave.length });

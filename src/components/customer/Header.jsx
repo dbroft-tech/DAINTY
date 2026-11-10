@@ -74,7 +74,7 @@ export default function Header({ cartCount, currentRoute }) {
 
   const shopByActive =
     activePage === 'shop' &&
-    (currentRoute.params.material || currentRoute.params.gender || currentRoute.params.occasion);
+    (currentRoute.params.material || currentRoute.params.gender || currentRoute.params.occasion || currentRoute.params.piercing);
 
   return (
     <header className="site-header-container" ref={headerRef}>
@@ -82,7 +82,7 @@ export default function Header({ cartCount, currentRoute }) {
       <div className="dainty-top-announcement-bar">
         <span className="announcement-arrow">‹</span>
         <span className="announcement-text">
-         Delivery across Uganda for all Orders  · Cash on Delivery &amp; Mobile Money
+          Delivery Across Kampala · Cash on Delivery &amp; Mobile Money
         </span>
         <span className="announcement-arrow">›</span>
       </div>
@@ -251,13 +251,18 @@ export default function Header({ cartCount, currentRoute }) {
                 <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('gender', 'Men'); }}>Men</a>
                 <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('gender', 'Unisex'); }}>Unisex</a>
 
-                {/* ═══ BY OCCASION ═══ */}
-                <div className="dropdown-section-label" style={{ marginTop: '0.4rem' }}>BY OCCASION</div>
-                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('occasion', 'Wedding'); }}>Wedding</a>
-                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('occasion', 'Engagement'); }}>Engagement</a>
-                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('occasion', 'Birthday'); }}>Birthday</a>
-                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('occasion', 'Gift'); }}>Gifts &amp; Hampers</a>
-                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('occasion', "Valentine's"); }}>Valentine's</a>
+                {/* ═══ SHOP BY PIERCING ═══ */}
+                <div className="dropdown-section-label" style={{ marginTop: '0.4rem' }}>Shop by Piercing</div>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Ear Lobe'); }}>Ear Lobe</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Helix/Cartilage'); }}>Helix/Cartilage</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Conch'); }}>Conch</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Tragus'); }}>Tragus</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Rook'); }}>Rook</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Daith'); }}>Daith</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Industrials'); }}>Industrials</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Nostril'); }}>Nostril</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Septum'); }}>Septum</a>
+                <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleShopByClick('piercing', 'Body Jewelry'); }}>Body Jewelry</a>
               </div>
             </div>
 

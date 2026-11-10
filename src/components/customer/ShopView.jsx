@@ -48,6 +48,25 @@ function searchAndFilterProducts(products, query, routeParams, filters, activeSu
   if (routeParams.material) {
     list = list.filter(p => p.material && p.material.toLowerCase().includes(routeParams.material.toLowerCase()));
   }
+  if (routeParams.piercing) {
+    const pTarget = routeParams.piercing.toLowerCase();
+    list = list.filter(p => {
+      const pField = (p.piercing_location || p.piercing || p.subcategory_id || '').toLowerCase();
+      const pName = (p.name || '').toLowerCase();
+      const pDesc = (p.description || '').toLowerCase();
+      const pTags = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : '';
+      if (pTarget === 'body jewelry') {
+        return p.category_id === 'body' || pField.includes('body') || pDesc.includes('body') || pTags.includes('body');
+      }
+      if (pTarget.includes('helix') || pTarget.includes('cartilage')) {
+        return pField.includes('helix') || pField.includes('cartilage') || pName.includes('helix') || pName.includes('cartilage') || pDesc.includes('cartilage') || pTags.includes('cartilage');
+      }
+      if (pTarget.includes('lobe')) {
+        return pField.includes('lobe') || pName.includes('lobe') || pDesc.includes('lobe') || pTags.includes('lobe') || p.category_id === 'earrings';
+      }
+      return pField.includes(pTarget) || pName.includes(pTarget) || pDesc.includes(pTarget) || pTags.includes(pTarget);
+    });
+  }
 
   // 5. Multi-select Filters
   if (filters.material && filters.material.length > 0) {
@@ -220,6 +239,7 @@ export default function ShopView({ routeParams, onAddToBag }) {
       };
       return map[routeParams.collection] || 'Collection';
     }
+    if (routeParams.piercing) return `${routeParams.piercing} Piercing Jewelry`;
     if (routeParams.gender) return `${routeParams.gender}'s Jewelry`;
     if (routeParams.occasion) return `${routeParams.occasion} Collection`;
     if (routeParams.material) return `${routeParams.material} Series`;

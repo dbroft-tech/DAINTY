@@ -134,7 +134,7 @@ function App() {
             </button>
             <div className="flex items-center gap-2 text-gray-500 font-serif italic text-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-[#b38728]"></span>
-              <span>DAINTY Atelier Kampala · 18K Gold Plated Jewelry</span>
+              <span>DAINTY Studs & Chains Kampala</span>
             </div>
           </div>
         </>
@@ -215,7 +215,7 @@ function App() {
                   <h3 className="dainty-footer-brand-title">DAINTY</h3>
                 </div>
                 <p className="dainty-footer-brand-desc">
-                  Uganda&apos;s premier destination for 18K gold-plated studs, tarnish-resistant chains, promise rings, and luxury jewelry sets. Handcrafted with precision for everyday elegance.
+                  Uganda&apos;s premier destination for 18K gold-plated studs And Chains for everyday elegance.
                 </p>
               </div>
 
@@ -229,51 +229,41 @@ function App() {
                   </li>
                   <li>
                     <Mail size={16} className="contact-icon" />
-                    <a href="mailto:info@daintystuds.com">info@daintystuds.com</a>
+                    <a href="mailto:daintystudsandchains@gmail.com">daintystudsandchains@gmail.com</a>
                   </li>
                   <li>
                     <MapPin size={16} className="contact-icon" />
-                    <span>Plot 45, Acacia Ave, Kampala, Uganda</span>
+                    <span>Goodwill zone, Kampala, Uganda</span>
                   </li>
                   <li>
                     <Clock size={16} className="contact-icon" />
-                    <span>9:00 AM – 7:30 PM (Mon – Sat)</span>
+                    <span>Mon – Sun: 24 Hours Active</span>
                   </li>
                 </ul>
               </div>
 
-              {/* Column 3: Informations */}
-              <div className="dainty-footer-col">
-                <h4 className="dainty-footer-heading">Informations</h4>
-                <ul className="dainty-footer-links">
-                  <li><a href="#/contact" onClick={(e) => { e.preventDefault(); navigateTo('contact'); }}>FAQ</a></li>
-                  <li><a href="#/contact" onClick={(e) => { e.preventDefault(); navigateTo('contact'); }}>Customer Care</a></li>
-                  <li><a href="#/contact" onClick={(e) => { e.preventDefault(); navigateTo('contact'); }}>Terms &amp; Conditions</a></li>
-                  <li><a href="#/shop?collection=best_sellers" onClick={(e) => { e.preventDefault(); navigateTo('shop', { collection: 'best_sellers' }); }}>Testimonials</a></li>
-                  <li><a href="#/shop" onClick={(e) => { e.preventDefault(); navigateTo('shop'); }}>Delivery &amp; Exchanges</a></li>
-                </ul>
-              </div>
+          
 
               {/* Column 4: Social Media */}
               <div className="dainty-footer-col">
                 <h4 className="dainty-footer-heading">Social Media</h4>
                 <ul className="dainty-footer-social-list">
                   <li>
-                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="social-icon">
-                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                      </svg>
-                      <span>Facebook Page</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+                    <a href="https://www.instagram.com/dainty_studs_and_chains?exln=MXc3cnI2ZDh1NGpzdw==" target="_blank" rel="noopener noreferrer">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="social-icon">
                         <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
                         <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                         <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
                       </svg>
-                      <span>Official Instagram</span>
+                      <span>Instagram (@dainty_studs_and_chains)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.tiktok.com/@daintystuds?_r=1&_t=ZS-9BChgZF8WY9" target="_blank" rel="noopener noreferrer">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="social-icon">
+                        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                      </svg>
+                      <span>TikTok (@daintystuds)</span>
                     </a>
                   </li>
                   <li>
@@ -285,13 +275,9 @@ function App() {
                     </a>
                   </li>
                   <li>
-                    <a href="https://pinterest.com" target="_blank" rel="noopener noreferrer">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="social-icon">
-                        <line x1="12" y1="4" x2="12" y2="20" />
-                        <path d="M18 10a6 6 0 0 0-12 0c0 3 2 5.5 5 6.5" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
-                      <span>Official Pinterest</span>
+                    <a href="mailto:daintystudsandchains@gmail.com">
+                      <Mail size={16} className="contact-icon" />
+                      <span>Email Support</span>
                     </a>
                   </li>
                 </ul>
@@ -304,7 +290,7 @@ function App() {
           <div className="dainty-footer-bottom-bar">
             <div className="dainty-footer-bottom-inner">
               <span className="bottom-copyright">
-                © {new Date().getFullYear()} DAINTY STUDS &amp; CHAINS. All Rights Reserved. Handcrafted in Kampala.
+                © {new Date().getFullYear()} DAINTY STUDS &amp; CHAINS. All Rights Reserved.
               </span>
               <div className="bottom-shortcuts">
                 <a

@@ -61,7 +61,9 @@ import {
   getAdminCredentials,
   updateAdminCredentials,
   compressImage,
-  categories
+  categories,
+  subcategories,
+  piercingLocations
 } from '../../db';
 
 // Format helper for Ugandan Shilling
@@ -99,14 +101,15 @@ const STATISTIC_SPLINE_DATA = [
 
 // Curated Studio Image Presets for 1-Click Product Image Selection
 const STUDIO_IMAGE_PRESETS = [
-  { label: 'Gold Ring', url: '/images/hero_rings.png' },
-  { label: 'Diamond Band', url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80' },
-  { label: 'Rivière Chain', url: '/images/hero_necklaces.png' },
-  { label: 'Gold Hoops', url: '/images/hero_home_earrings.png' },
-  { label: 'Tennis Bracelet', url: '/images/hero_bracelets.png' },
-  { label: 'Luxury Watch', url: '/images/hero_watches.png' },
-  { label: 'Heart Pendant', url: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80' },
-  { label: 'Pearl Choker', url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80' }
+  { label: 'Gold Flat-Back', url: '/images/vi.jpeg' },
+  { label: 'Silver Labret', url: '/images/0.jpeg' },
+  { label: 'Gold Open Ring', url: '/images/i.jpeg' },
+  { label: 'Diamond Eternity', url: '/images/ii.jpeg' },
+  { label: 'Pavé Clicker', url: '/images/iii.jpeg' },
+  { label: 'Ring & Chain', url: '/images/iv.jpeg' },
+  { label: 'Chain Drape Ring', url: '/images/v.jpeg' },
+  { label: 'Marquise Cluster', url: '/images/vii.jpeg' },
+  { label: 'Earring Set', url: '/images/viii.jpeg' }
 ];
 
 // Custom Tooltip for Spline Chart (Matches dark floating tooltip in five.webp)
@@ -273,9 +276,12 @@ export default function AdminPortal({ onLogout } = {}) {
 
   const confirmDeleteProduct = () => {
     if (!productToDelete) return;
-    deleteProduct(productToDelete.id);
+    const toDeleteId = productToDelete.id;
+    const toDeleteName = productToDelete.name;
+    deleteProduct(toDeleteId);
+    setProducts(prev => prev.filter(p => p.id !== toDeleteId));
     reloadData();
-    showToast(`Product "${productToDelete.name}" was permanently deleted from catalog.`);
+    showToast(`Product "${toDeleteName}" was permanently deleted from catalog.`);
     setProductToDelete(null);
   };
 
@@ -306,6 +312,15 @@ export default function AdminPortal({ onLogout } = {}) {
   // Save / Update product handler
   const handleSaveProduct = (productData) => {
     const saved = saveProduct(productData);
+    setProducts(prev => {
+      const idx = prev.findIndex(p => p.id === saved.id);
+      if (idx !== -1) {
+        const next = [...prev];
+        next[idx] = saved;
+        return next;
+      }
+      return [saved, ...prev];
+    });
     reloadData();
     setIsProductModalOpen(false);
     setEditingProduct(null);
@@ -1507,7 +1522,7 @@ export default function AdminPortal({ onLogout } = {}) {
                     <tbody className="divide-y divide-[#f3ece6]">
                       {filteredProducts.length > 0 ? (
                         filteredProducts.map((p) => {
-                          const primaryImg = p.images?.[0] || p.image || '/images/hero_rings.png';
+                          const primaryImg = p.images?.[0] || p.image || '/images/vi.jpeg';
                           return (
                             <tr key={p.id} className="hover:bg-amber-50/40 transition-colors">
                               <td className="p-4">
@@ -1518,7 +1533,7 @@ export default function AdminPortal({ onLogout } = {}) {
                                       alt={p.name}
                                       className="w-full h-full object-cover"
                                       onError={(e) => {
-                                        e.currentTarget.src = '/images/hero_rings.png';
+                                        e.currentTarget.src = '/images/vi.jpeg';
                                       }}
                                     />
                                   </div>
@@ -2069,7 +2084,7 @@ export default function AdminPortal({ onLogout } = {}) {
 
             <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200/80 flex items-center gap-3.5">
               <img
-                src={productToDelete.image || productToDelete.images?.[0] || '/images/hero_rings.png'}
+                src={productToDelete.image || productToDelete.images?.[0] || '/images/vi.jpeg'}
                 alt={productToDelete.name}
                 className="w-14 h-14 object-cover rounded-lg border border-gray-200 shrink-0"
               />
@@ -2232,13 +2247,19 @@ function ProductFormModal({ product, onClose, onSave }) {
   const [formData, setFormData] = useState({
     id: product?.id || undefined,
     name: product?.name || '',
-    category_id: product?.category_id || product?.category || 'rings',
+    category_id: product?.category_id || product?.category || 'earrings',
+    subcategory_id: product?.subcategory_id || 'stud_ear',
+    piercing_location: product?.piercing_location || product?.piercing || 'Ear Lobe',
     price: product?.price || '',
     sale_price: product?.sale_price || '',
     stock_quantity: product?.stock_quantity !== undefined ? product.stock_quantity : 15,
-    material: product?.material || 'Gold-Plated',
+    material: product?.material || 'Stainless Steel & Titanium',
+    finish: product?.finish || 'Tarnish-Resistant Finish',
     color: product?.color || 'Gold',
-    sku: product?.sku || (product?.id ? `DSC-${product.id.toUpperCase()}` : 'DSC-NEW'),
+    length_size: product?.length_size || product?.size || 'Adjustable Fit / 45 cm standard chain length',
+    gender: product?.gender || 'Women',
+    occasion: product?.occasion || 'Everyday',
+    sku: product?.sku || (product?.id ? `DSC-${product.id.toUpperCase()}` : 'DSC-ST-01'),
     description: product?.description || '',
     featured: product?.featured || false,
     new_arrival: product?.new_arrival ?? true,
@@ -2247,7 +2268,7 @@ function ProductFormModal({ product, onClose, onSave }) {
   });
 
   const [imagePreview, setImagePreview] = useState(
-    formData.images?.[0] || product?.image || '/images/hero_rings.png'
+    formData.images?.[0] || product?.image || '/images/vi.jpeg'
   );
 
   // File Upload Handler with client-side image optimization
@@ -2280,17 +2301,26 @@ function ProductFormModal({ product, onClose, onSave }) {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
-    const activeImg = imagePreview && imagePreview.trim() ? imagePreview : '/images/hero_rings.png';
+    const activeImg = imagePreview && imagePreview.trim() ? imagePreview : '/images/vi.jpeg';
     const payload = {
       ...formData,
       name: formData.name.trim(),
       price: Number(formData.price) || 50000,
       sale_price: formData.sale_price ? Number(formData.sale_price) : null,
       stock_quantity: Number(formData.stock_quantity) || 0,
+      material: formData.material || 'Stainless Steel & Titanium',
+      finish: formData.finish || 'Tarnish-Resistant Finish',
+      color: formData.color || 'Gold',
+      length_size: formData.length_size || 'Adjustable Fit / 45 cm standard chain length',
+      gender: formData.gender || 'Women',
+      occasion: formData.occasion || 'Everyday',
+      category_id: formData.category_id || 'earrings',
+      subcategory_id: formData.subcategory_id || 'stud_ear',
+      piercing_location: formData.piercing_location || 'Ear Lobe',
       images: [activeImg, ...(formData.images?.slice(1) || [])].filter(Boolean)
     };
     if (!payload.images || payload.images.length === 0) {
-      payload.images = ['/images/hero_rings.png'];
+      payload.images = ['/images/vi.jpeg'];
     }
     if (!product) {
       delete payload.id;
@@ -2381,7 +2411,7 @@ function ProductFormModal({ product, onClose, onSave }) {
                       alt="Product Preview"
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
-                        e.currentTarget.src = '/images/hero_rings.png';
+                        e.currentTarget.src = '/images/vi.jpeg';
                       }}
                     />
                   ) : (
@@ -2472,11 +2502,11 @@ function ProductFormModal({ product, onClose, onSave }) {
             {/* RIGHT COLUMN: Specifications, Pricing & Details (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
               
-              {/* Card 1: Essential Information */}
+              {/* Card 1: All Categorizations & Identity */}
               <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-5">
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900">Jewelry Specifications</h3>
-                  <p className="text-xs text-gray-400">Title, category classification, and metal finish</p>
+                  <h3 className="text-sm font-bold text-gray-900">Categorization &amp; Identity</h3>
+                  <p className="text-xs text-gray-400">Title, product categories, piercing placements, and SKU</p>
                 </div>
 
                 <div className="space-y-4">
@@ -2489,70 +2519,223 @@ function ProductFormModal({ product, onClose, onSave }) {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g. 18K Gold Plated Solitaire Marquise Ring"
+                      placeholder="e.g. 14K Gold Marquise Cluster Stud Earring"
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-[#b38728] focus:bg-white transition-all"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* All Categorizations */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-800 mb-1.5">Category</label>
                       <select
                         value={formData.category_id}
-                        onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                        onChange={() => {
+                          setFormData((prev) => ({ 
+                            ...prev, 
+                            category_id: 'earrings'
+                          }));
+                        }}
                         className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white capitalize"
                       >
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
+                        <option value="earrings">Earrings</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-1.5">Material</label>
+                      <label className="block text-xs font-bold text-gray-800 mb-1.5">Subcategory</label>
                       <select
-                        value={formData.material}
-                        onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+                        value={formData.subcategory_id}
+                        onChange={(e) => setFormData({ ...formData, subcategory_id: e.target.value })}
                         className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
                       >
-                        <option value="Gold-Plated">18K Gold-Plated</option>
-                        <option value="Stainless Steel">Stainless Steel (Tarnish-Free)</option>
-                        <option value="Titanium">Pure Titanium</option>
-                        <option value="Sterling Silver">925 Sterling Silver</option>
-                        <option value="Rose Gold">18K Rose Gold Finish</option>
+                        {subcategories
+                          .filter(s => !formData.category_id || s.categoryId === formData.category_id)
+                          .map((sub) => (
+                            <option key={sub.id} value={sub.id}>
+                              {sub.name}
+                            </option>
+                          ))}
+                        {subcategories.every(s => s.categoryId !== formData.category_id) && (
+                          <option value="general">General / Standard</option>
+                        )}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-1.5">Shop by Piercing</label>
+                      <select
+                        value={formData.piercing_location}
+                        onChange={(e) => setFormData({ ...formData, piercing_location: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
+                      >
+                        {piercingLocations.map((loc) => (
+                          <option key={loc} value={loc}>
+                            {loc}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-800 mb-1.5">Color / Tone</label>
-                      <select
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
-                      >
-                        <option value="Gold">Gold</option>
-                        <option value="Silver">Silver</option>
-                        <option value="Rose Gold">Rose Gold</option>
-                        <option value="White">White / Pearl</option>
-                        <option value="Black">Black</option>
-                        <option value="Mixed">Mixed / Dual-Tone</option>
-                      </select>
-                    </div>
-
                     <div>
                       <label className="block text-xs font-bold text-gray-800 mb-1.5">SKU Inventory Code</label>
                       <input
                         type="text"
                         value={formData.sku}
                         onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                        placeholder="DSC-RG-01"
+                        placeholder="DSC-ST-MRQ-11"
                         className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-mono outline-none focus:border-[#b38728] focus:bg-white uppercase"
                       />
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-1.5">Stock Status / Availability</label>
+                      <select
+                        value={formData.stock_quantity > 0 ? 'in_stock' : 'out_of_stock'}
+                        onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value === 'in_stock' ? (Number(formData.stock_quantity) > 0 ? formData.stock_quantity : 15) : 0 })}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
+                      >
+                        <option value="in_stock">In Stock (Available in Bag &amp; WhatsApp)</option>
+                        <option value="out_of_stock">Out of Stock</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Product Specifications Table (Matches Storefront View 3) */}
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-900">Product Specifications</h3>
+                    <p className="text-xs text-gray-400">Specifications displayed in the product details table on the storefront</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-1 bg-amber-50 text-amber-800 rounded-md border border-amber-200/60">
+                    Storefront Spec Table
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Material */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                      Material <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={formData.material}
+                      onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
+                    >
+                      <option value="Stainless Steel & Titanium">Stainless Steel &amp; Titanium</option>
+                      <option value="Stainless Steel">Stainless Steel</option>
+                      <option value="Titanium">Titanium (Implant-Grade)</option>
+                      <option value="Titanium & Gold PVD">Titanium &amp; Gold PVD</option>
+                      <option value="18K Gold-Plated">18K Gold-Plated</option>
+                      <option value="925 Sterling Silver">925 Sterling Silver</option>
+                      <option value="18K Rose Gold Finish">18K Rose Gold Finish</option>
+                    </select>
+                  </div>
+
+                  {/* Finish */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                      Finish <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      list="admin-finish-options"
+                      value={formData.finish}
+                      onChange={(e) => setFormData({ ...formData, finish: e.target.value })}
+                      placeholder="e.g. Tarnish-Resistant Finish"
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
+                    />
+                    <datalist id="admin-finish-options">
+                      <option value="Tarnish-Resistant Finish" />
+                      <option value="High Mirror Polish" />
+                      <option value="PVD Vacuum Plated" />
+                      <option value="Antioxidant Coated" />
+                      <option value="Water-Resistant Luster" />
+                    </datalist>
+                  </div>
+
+                  {/* Color */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                      Color <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={formData.color}
+                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
+                    >
+                      <option value="Gold">Gold</option>
+                      <option value="Silver">Silver</option>
+                      <option value="Rose Gold">Rose Gold</option>
+                      <option value="White / Pearl">White / Pearl</option>
+                      <option value="Black">Black</option>
+                      <option value="Mixed">Mixed / Dual-Tone</option>
+                    </select>
+                  </div>
+
+                  {/* Length/Size */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                      Length/Size <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      list="admin-length-options"
+                      value={formData.length_size}
+                      onChange={(e) => setFormData({ ...formData, length_size: e.target.value })}
+                      placeholder="e.g. Adjustable Fit / 45 cm standard chain length"
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
+                    />
+                    <datalist id="admin-length-options">
+                      <option value="Adjustable Fit / 45 cm standard chain length" />
+                      <option value="6mm Post / 16G (1.2mm)" />
+                      <option value="8mm Post / 16G (1.2mm)" />
+                      <option value="10mm Post / 16G (1.2mm)" />
+                      <option value="18 Gauge (1.0mm) Universal" />
+                      <option value="Standard Lobe Fit" />
+                    </datalist>
+                  </div>
+
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                      Gender <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
+                    >
+                      <option value="Women">Women</option>
+                      <option value="Unisex">Unisex</option>
+                      <option value="Men">Men</option>
+                    </select>
+                  </div>
+
+                  {/* Occasion */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                      Occasion <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={formData.occasion}
+                      onChange={(e) => setFormData({ ...formData, occasion: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-[#b38728] focus:bg-white"
+                    >
+                      <option value="Everyday">Everyday</option>
+                      <option value="Party">Party</option>
+                      <option value="Gift">Gifts &amp; Hampers</option>
+                      <option value="Wedding">Wedding</option>
+                      <option value="Engagement">Engagement</option>
+                      <option value="Birthday">Birthday</option>
+                      <option value="Valentine's">Valentine's</option>
+                      <option value="Anniversary">Anniversary</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -2569,18 +2752,18 @@ function ProductFormModal({ product, onClose, onSave }) {
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
                       Standard Price (UGX) <span className="text-rose-500">*</span>
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">
-                        UGX
-                      </span>
+                    <div className="relative flex items-center">
                       <input
                         type="number"
                         required
                         value={formData.price}
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         placeholder="85000"
-                        className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900 outline-none focus:border-[#b38728] focus:bg-white"
+                        className="w-full pl-4 pr-16 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900 outline-none focus:border-[#b38728] focus:bg-white transition-all"
                       />
+                      <span className="absolute right-3.5 text-[11px] font-bold text-gray-400 pointer-events-none select-none">
+                        UGX
+                      </span>
                     </div>
                   </div>
 
@@ -2588,17 +2771,17 @@ function ProductFormModal({ product, onClose, onSave }) {
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
                       Sale / Promo Price (UGX)
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-400">
-                        UGX
-                      </span>
+                    <div className="relative flex items-center">
                       <input
                         type="number"
                         value={formData.sale_price || ''}
                         onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
                         placeholder="Optional sale"
-                        className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-[#b38728] focus:bg-white"
+                        className="w-full pl-4 pr-16 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-[#b38728] focus:bg-white transition-all"
                       />
+                      <span className="absolute right-3.5 text-[11px] font-bold text-gray-400 pointer-events-none select-none">
+                        UGX
+                      </span>
                     </div>
                   </div>
 

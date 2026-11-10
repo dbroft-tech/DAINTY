@@ -87,6 +87,20 @@ export const subcategories = [
   { id: 'care_prod', categoryId: 'accessories', name: 'Jewelry Care Products' }
 ];
 
+// Piercing Location Categorization (Shop by Piercing)
+export const piercingLocations = [
+  'Ear Lobe',
+  'Helix/Cartilage',
+  'Conch',
+  'Tragus',
+  'Rook',
+  'Daith',
+  'Industrials',
+  'Nostril',
+  'Septum',
+  'Body Jewelry'
+];
+
 // Seed Products
 const defaultProducts = [
   {
@@ -378,6 +392,167 @@ const defaultProducts = [
       'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80'
     ],
     tags: ['box', 'organizer', 'velvet', 'storage']
+  },
+  {
+    id: 'prod_11',
+    name: 'DAINTY 14K Gold Marquise Cluster Stud Earring',
+    description: 'Exquisite multi-stone marquise and round brilliant cut CZ cluster stud crafted in warm 14K gold plate with high security back. A signature delicate piece tailored for lobe or flat cartilage styling.',
+    price: 95000,
+    sale_price: 85000,
+    category_id: 'earrings',
+    subcategory_id: 'stud_ear',
+    material: '14K Gold-Plated',
+    color: 'Gold',
+    gender: 'Women',
+    occasion: 'Everyday',
+    stock_quantity: 35,
+    sku: 'DSC-ST-MRQ-11',
+    featured: true,
+    new_arrival: true,
+    best_seller: true,
+    limited_edition: false,
+    clearance: false,
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    images: [
+      '/images/stud_vii_marquise_cluster_stud.jpeg',
+      '/images/vii.jpeg',
+      '/images/hero_home_earrings.png'
+    ],
+    tags: ['stud', 'marquise', 'dainty studs', 'piercing', 'gold']
+  },
+  {
+    id: 'prod_12',
+    name: 'DAINTY 18K Gold Draped Chain Piercing Ring',
+    description: 'An architectural statement hoop featuring a delicate suspended cascade chain connecting the front clasp to a gentle drape. Designed for septum, helix, or conch styling.',
+    price: 85000,
+    sale_price: null,
+    category_id: 'earrings',
+    subcategory_id: 'dang_ear',
+    material: '18K Gold-Plated',
+    color: 'Gold',
+    gender: 'Unisex',
+    occasion: 'Everyday',
+    stock_quantity: 28,
+    sku: 'DSC-CH-DRP-12',
+    featured: true,
+    new_arrival: true,
+    best_seller: true,
+    limited_edition: false,
+    clearance: false,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    images: [
+      '/images/stud_v_gold_draped_chain_ring.jpeg',
+      '/images/v.jpeg',
+      '/images/stud_iv_gold_chain_ring.jpeg'
+    ],
+    tags: ['chain', 'chains', 'drape', 'piercing', 'septum']
+  },
+  {
+    id: 'prod_13',
+    name: 'DAINTY Diamond Pavé Eternity Clicker Hoop',
+    description: 'Seamless hinged clicker ring paved with radiant pavé micro-gemstones. Effortless click-to-close mechanism offering continuous sparkle for tragus, helix, and lobe piercings.',
+    price: 78000,
+    sale_price: 69000,
+    category_id: 'earrings',
+    subcategory_id: 'hugg_ear',
+    material: 'Gold-Plated',
+    color: 'Gold',
+    gender: 'Women',
+    occasion: 'Everyday',
+    stock_quantity: 42,
+    sku: 'DSC-ER-PVH-13',
+    featured: true,
+    new_arrival: true,
+    best_seller: true,
+    limited_edition: false,
+    clearance: false,
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    images: [
+      '/images/stud_iii_gold_pave_clicker.jpeg',
+      '/images/iii.jpeg',
+      '/images/stud_ii_diamond_eternity_ring.jpeg'
+    ],
+    tags: ['pave', 'clicker', 'hoop', 'dainty studs', 'gold']
+  },
+  {
+    id: 'prod_14',
+    name: 'DAINTY Curated 3-Pair Earring & Stud Suite',
+    description: 'The ultimate ear stack in a single presentation: includes micro-pavé huggies, classic mirror-polished hoops, and round brilliant solitary studs. Made for mix-and-match stacking.',
+    price: 145000,
+    sale_price: 125000,
+    category_id: 'sets',
+    subcategory_id: 'stud_ear',
+    material: 'Gold-Plated',
+    color: 'Gold',
+    gender: 'Women',
+    occasion: 'Gift',
+    stock_quantity: 20,
+    sku: 'DSC-SET-CUR-14',
+    featured: true,
+    new_arrival: true,
+    best_seller: true,
+    limited_edition: true,
+    clearance: false,
+    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    images: [
+      '/images/stud_viii_luxury_earring_curation_set.jpeg',
+      '/images/viii.jpeg',
+      '/images/hero_home_luxury.png'
+    ],
+    tags: ['ear stack', 'curation set', 'gift set', 'studs']
+  },
+  {
+    id: 'prod_15',
+    name: 'DAINTY Threadless Gold Flat-Back Labret Stud',
+    description: 'Implant-grade flat back comfort stud featuring a mirror-finish 18K PVD gold front pin. Built for sleeping and active days without poking behind the ear.',
+    price: 55000,
+    sale_price: null,
+    category_id: 'earrings',
+    subcategory_id: 'stud_ear',
+    material: 'Titanium & Gold PVD',
+    color: 'Gold',
+    gender: 'Unisex',
+    occasion: 'Everyday',
+    stock_quantity: 50,
+    sku: 'DSC-LB-GLD-15',
+    featured: true,
+    new_arrival: true,
+    best_seller: false,
+    limited_edition: false,
+    clearance: false,
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    images: [
+      '/images/stud_vi_gold_flatback_labret.jpeg',
+      '/images/vi.jpeg',
+      '/images/stud_0_silver_flatback.jpeg'
+    ],
+    tags: ['flat back', 'labret', 'stud', 'dainty studs', 'piercing']
+  },
+  {
+    id: 'prod_16',
+    name: 'DAINTY Minimalist Open Ring Piercing Clicker',
+    description: 'Ultra-refined minimalist open piercing contour with safety post ball. Designed for high fashion curated styling on nose or cartilage.',
+    price: 45000,
+    sale_price: 39000,
+    category_id: 'earrings',
+    subcategory_id: 'hugg_ear',
+    material: '18K Gold-Plated',
+    color: 'Gold',
+    gender: 'Unisex',
+    occasion: 'Everyday',
+    stock_quantity: 30,
+    sku: 'DSC-RN-OPN-16',
+    featured: false,
+    new_arrival: true,
+    best_seller: false,
+    limited_edition: false,
+    clearance: false,
+    created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    images: [
+      '/images/stud_i_gold_open_ring.jpeg',
+      '/images/i.jpeg'
+    ],
+    tags: ['open ring', 'minimalist', 'cartilage', 'septum']
   }
 ];
 
@@ -390,7 +565,7 @@ const STORAGE_PREFIX = 'dainty_ecommerce_';
 export async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.82) {
   return new Promise((resolve) => {
     if (!file || !file.type || !file.type.startsWith('image/')) {
-      resolve('/images/hero_rings.png');
+      resolve('/images/vi.jpeg');
       return;
     }
     const reader = new FileReader();
@@ -429,45 +604,9 @@ export async function compressImage(file, maxWidth = 1000, maxHeight = 1000, qua
       img.onerror = () => resolve(e.target.result);
       img.src = e.target.result;
     };
-    reader.onerror = () => resolve('/images/hero_rings.png');
+    reader.onerror = () => resolve('/images/vi.jpeg');
     reader.readAsDataURL(file);
   });
-}
-
-// Track deleted IDs so sync never accidentally restores deleted items
-function getDeletedProductIds() {
-  try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + 'deleted_ids');
-    return new Set(raw ? JSON.parse(raw) : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function addDeletedProductId(id) {
-  if (!id) return;
-  try {
-    const set = getDeletedProductIds();
-    set.add(String(id));
-    localStorage.setItem(STORAGE_PREFIX + 'deleted_ids', JSON.stringify(Array.from(set)));
-  } catch {}
-}
-
-function removeDeletedProductId(id) {
-  if (!id) return;
-  try {
-    const set = getDeletedProductIds();
-    if (set.has(String(id))) {
-      set.delete(String(id));
-      localStorage.setItem(STORAGE_PREFIX + 'deleted_ids', JSON.stringify(Array.from(set)));
-    }
-  } catch {}
-}
-
-function clearDeletedProductIds() {
-  try {
-    localStorage.removeItem(STORAGE_PREFIX + 'deleted_ids');
-  } catch {}
 }
 
 function getStorageItem(key, defaultValue) {
@@ -491,75 +630,67 @@ function setStorageItem(key, value) {
   }
 }
 
+// Blacklist tracking for permanently deleted products
+export function getDeletedProductIds() {
+  const list = getStorageItem('deleted_product_ids', []);
+  return new Set(Array.isArray(list) ? list : []);
+}
+
+export function addDeletedProductId(productId) {
+  if (!productId) return;
+  const list = getStorageItem('deleted_product_ids', []);
+  const safeList = Array.isArray(list) ? list : [];
+  if (!safeList.includes(productId)) {
+    setStorageItem('deleted_product_ids', [...safeList, productId]);
+  }
+}
+
+export function removeDeletedProductId(productId) {
+  if (!productId) return;
+  const list = getStorageItem('deleted_product_ids', []);
+  const safeList = Array.isArray(list) ? list : [];
+  if (safeList.includes(productId)) {
+    setStorageItem('deleted_product_ids', safeList.filter(id => id !== productId));
+  }
+}
+
 // Background sync with /api/products database
 let isServerSyncStarted = false;
 export async function syncProductsWithServer() {
   try {
     const res = await fetch('/api/products');
-    if (!res.ok) return;
+    if (res.ok) {
+      const serverProducts = await res.json();
+      if (Array.isArray(serverProducts)) {
+        const deletedSet = getDeletedProductIds();
+        
+        // Clean server products from any locally permanently deleted items
+        const cleanServer = serverProducts.filter(p => p && p.id && !deletedSet.has(p.id));
+        
+        // Retain any locally added products that might not have reached server yet
+        const localProds = getStorageItem('products', []);
+        const safeLocal = Array.isArray(localProds) ? localProds : [];
+        const serverIdSet = new Set(cleanServer.map(p => p.id));
+        const localOnly = safeLocal.filter(p => p && p.id && !serverIdSet.has(p.id) && !deletedSet.has(p.id));
 
-    const serverProducts = await res.json();
-    if (!Array.isArray(serverProducts)) return;
-
-    const deletedIds = getDeletedProductIds();
-    // Exclude any products explicitly deleted by the admin
-    const validServerProducts = serverProducts.filter(p => p && p.id && !deletedIds.has(String(p.id)));
-
-    // Get current local products
-    const localProducts = getStorageItem('products', []);
-    const serverIdSet = new Set(validServerProducts.map(p => String(p.id)));
-
-    // Identify locally created products that the server doesn't have yet
-    const missingOnServer = [];
-    if (Array.isArray(localProducts)) {
-      for (const lp of localProducts) {
-        if (lp && lp.id && !deletedIds.has(String(lp.id)) && !serverIdSet.has(String(lp.id))) {
-          missingOnServer.push(lp);
-        }
+        const merged = [...localOnly, ...cleanServer];
+        setStorageItem('products', merged);
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'sync', count: merged.length } }));
       }
-    }
-
-    // Combine: local-first new items + valid server items
-    const merged = [...missingOnServer, ...validServerProducts];
-    merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-
-    // Save persistent merged list
-    localStorage.setItem(STORAGE_PREFIX + 'products', JSON.stringify(merged));
-    window.dispatchEvent(new Event('storage'));
-    window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'sync', count: merged.length } }));
-
-    // Send any local products that were missing on the server
-    for (const prod of missingOnServer) {
-      try {
-        await fetch('/api/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(prod)
-        });
-      } catch {}
     }
   } catch (err) {
     console.warn('Server database sync idle:', err.message);
   }
 }
 
-// Background sync with /api/orders database
-export async function syncOrdersWithServer() {
-  try {
-    const res = await fetch('/api/orders');
-    if (res.ok) {
-      const serverOrders = await res.json();
-      if (Array.isArray(serverOrders) && serverOrders.length > 0) {
-        setStorageItem('orders', serverOrders);
-      }
-    }
-  } catch {}
-}
-
 // Initialization
 export function initDB() {
-  if (!localStorage.getItem(STORAGE_PREFIX + 'products')) {
-    setStorageItem('products', defaultProducts);
+  const deletedSet = getDeletedProductIds();
+  const existingProds = getStorageItem('products', null);
+  if (!existingProds) {
+    const initialList = defaultProducts.filter(p => !deletedSet.has(p.id));
+    setStorageItem('products', initialList);
   }
   if (!localStorage.getItem(STORAGE_PREFIX + 'orders')) {
     setStorageItem('orders', []);
@@ -580,64 +711,60 @@ export function initDB() {
   if (!isServerSyncStarted && typeof window !== 'undefined') {
     isServerSyncStarted = true;
     syncProductsWithServer();
-    syncOrdersWithServer();
   }
 }
 
 // Products API
 export function getProducts() {
   initDB();
+  const deletedSet = getDeletedProductIds();
   const prods = getStorageItem('products', null);
-  if (Array.isArray(prods)) {
-    const deletedIds = getDeletedProductIds();
-    return prods.filter(p => p && p.id && !deletedIds.has(String(p.id)));
-  }
-  return defaultProducts;
+  const base = Array.isArray(prods) ? prods : defaultProducts;
+  return base.filter(p => p && p.id && !deletedSet.has(p.id));
 }
 
 export function saveProduct(product) {
-  const products = [...getProducts()];
   const cleanProduct = { ...product };
+
+  // If this product ID was previously in deleted blacklist, clear it
+  if (cleanProduct.id) {
+    removeDeletedProductId(cleanProduct.id);
+  } else {
+    cleanProduct.id = 'prod_' + Math.random().toString(36).substr(2, 9);
+    cleanProduct.created_at = new Date().toISOString();
+  }
 
   // Ensure default metadata for storefront filtering
   if (!cleanProduct.gender) cleanProduct.gender = 'Women';
   if (!cleanProduct.occasion) cleanProduct.occasion = 'Everyday';
   if (!cleanProduct.category_id && cleanProduct.category) cleanProduct.category_id = cleanProduct.category;
-  if (!cleanProduct.category_id) cleanProduct.category_id = 'rings';
+  if (!cleanProduct.category_id) cleanProduct.category_id = 'earrings';
   if (cleanProduct.new_arrival === undefined) cleanProduct.new_arrival = true;
   if (!cleanProduct.created_at) cleanProduct.created_at = new Date().toISOString();
 
   // Normalize images
   if (!Array.isArray(cleanProduct.images) || cleanProduct.images.length === 0) {
-    cleanProduct.images = [cleanProduct.image || '/images/hero_rings.png'];
+    cleanProduct.images = [cleanProduct.image || '/images/vi.jpeg'];
   }
 
-  if (cleanProduct.id) {
-    removeDeletedProductId(cleanProduct.id);
-    const idx = products.findIndex(p => p.id === cleanProduct.id);
-    if (idx !== -1) {
-      products[idx] = { ...products[idx], ...cleanProduct };
-    } else {
-      products.unshift(cleanProduct);
-    }
+  const products = [...getProducts()];
+  const idx = products.findIndex(p => p.id === cleanProduct.id);
+  if (idx !== -1) {
+    products[idx] = { ...products[idx], ...cleanProduct };
   } else {
-    cleanProduct.id = 'prod_' + Math.random().toString(36).substr(2, 9);
-    removeDeletedProductId(cleanProduct.id);
     products.unshift(cleanProduct); // Prepend to top so it's immediately visible
   }
 
-  // Persist locally immediately
+  // Persist locally
   setStorageItem('products', products);
+  window.dispatchEvent(new Event('storage'));
+  window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'save', id: cleanProduct.id } }));
 
-  // Persist to server database
+  // Persist to server database asynchronously
   fetch('/api/products', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(cleanProduct)
-  }).then(async res => {
-    if (!res.ok) {
-      console.warn('Server product POST returned status:', res.status);
-    }
   }).catch(err => {
     console.warn('Failed to persist product to server database:', err);
   });
@@ -647,21 +774,23 @@ export function saveProduct(product) {
 
 export function deleteProduct(productId) {
   if (!productId) return;
+
+  // 1. Permanently register in deleted blacklist so it NEVER resurrects
   addDeletedProductId(productId);
 
-  const products = getProducts();
-  const filtered = products.filter(p => p.id !== productId);
-  
-  // Persist locally immediately
+  // 2. Immediately remove from local products array
+  const currentProds = getStorageItem('products', defaultProducts);
+  const safeCurrent = Array.isArray(currentProds) ? currentProds : defaultProducts;
+  const filtered = safeCurrent.filter(p => p && p.id !== productId);
   setStorageItem('products', filtered);
 
-  // Persist to server database
+  // 3. Immediately emit change events across components and tabs
+  window.dispatchEvent(new Event('storage'));
+  window.dispatchEvent(new CustomEvent('dainty_products_changed', { detail: { action: 'delete', id: productId } }));
+
+  // 4. Persist deletion to server database asynchronously
   fetch(`/api/products/${productId}`, {
     method: 'DELETE'
-  }).then(async res => {
-    if (!res.ok) {
-      console.warn('Server product DELETE returned status:', res.status);
-    }
   }).catch(err => {
     console.warn('Failed to delete product from server database:', err);
   });
@@ -704,15 +833,8 @@ export function saveOrder(orderData) {
     status: 'Pending',
     created_at: new Date().toISOString()
   };
-  orders.unshift(newOrder);
+  orders.push(newOrder);
   setStorageItem('orders', orders);
-
-  // Persist to server database
-  fetch('/api/orders', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(newOrder)
-  }).catch(err => console.warn('Order server sync error:', err));
 
   // Reduce product stock
   const products = getProducts();
@@ -733,11 +855,6 @@ export function updateOrderStatus(orderId, status) {
   if (idx !== -1) {
     orders[idx].status = status;
     setStorageItem('orders', orders);
-    fetch(`/api/orders/${orderId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    }).catch(() => {});
     return orders[idx];
   }
   return null;
@@ -760,13 +877,6 @@ export function saveMessage(chatId, sender, content) {
   };
   messages.push(newMessage);
   setStorageItem('messages', messages);
-
-  fetch('/api/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, sender, content })
-  }).catch(() => {});
-
   return newMessage;
 }
 
@@ -791,8 +901,8 @@ export function getChats() {
 
 // Reset Database Utility
 export function resetDatabase() {
-  clearDeletedProductIds();
   localStorage.removeItem(STORAGE_PREFIX + 'products');
+  localStorage.removeItem(STORAGE_PREFIX + 'deleted_product_ids');
   localStorage.removeItem(STORAGE_PREFIX + 'orders');
   localStorage.removeItem(STORAGE_PREFIX + 'messages');
   setStorageItem('products', defaultProducts);
