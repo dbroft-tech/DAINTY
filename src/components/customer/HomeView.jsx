@@ -314,9 +314,9 @@ export default function HomeView({ onAddToBag }) {
           </div>
         </div>
 
-        {/* Column 2: Instagram & TikTok Social Grid */}
+        {/* Column 2: Instagram Grid */}
         <div className="dainty-community-box">
-          <h3 className="box-title">FOLLOW @DAINTY_STUDS_AND_CHAINS</h3>
+          <h3 className="box-title">FOLLOW @DAINTY.JEWELRY</h3>
           <div className="dainty-ig-grid">
             <div className="dainty-ig-item">
               <img src="/images/iv.jpeg" alt="Earrings with chains" />
@@ -328,25 +328,15 @@ export default function HomeView({ onAddToBag }) {
               <img src="/images/vii.jpeg" alt="Marquise cluster stud" />
             </div>
             <div className="dainty-ig-item">
-              <img src="/images/iii.jpeg" alt="Curated earring stack" />
+              <img src="/images/viii.jpeg" alt="Curated earring stack" />
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
-            <button
-              className="dainty-btn-ig"
-              style={{ width: '100%', justifyContent: 'center' }}
-              onClick={() => window.open('https://www.instagram.com/dainty_studs_and_chains?exln=MXc3cnI2ZDh1NGpzdw==', '_blank')}
-            >
-              FOLLOW ON INSTAGRAM
-            </button>
-            <button
-              className="dainty-btn-ig"
-              style={{ width: '100%', justifyContent: 'center', background: '#1c1917', borderColor: '#1c1917', color: '#ffffff' }}
-              onClick={() => window.open('https://www.tiktok.com/@daintystuds?_r=1&_t=ZS-9BChgZF8WY9', '_blank')}
-            >
-              WATCH ON TIKTOK
-            </button>
-          </div>
+          <button
+            className="dainty-btn-ig"
+            onClick={() => window.open('https://instagram.com', '_blank')}
+          >
+            EXPLORE ON INSTAGRAM
+          </button>
         </div>
 
         {/* Column 3: Newsletter */}

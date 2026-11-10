@@ -17,7 +17,7 @@ const slidesConfig = {
       description: 'Comfortable flat-back labrets and sparkling multi-stone studs.'
     },
     {
-      image: '/images/vii.jpeg',
+      image: '/images/viii.jpeg',
       subtitle: 'CURATED EAR STACKS',
       title: 'Mix, Match & Stack Your Piercings',
       description: 'Handpicked suites of huggies, clickers, and dainty studs.'
@@ -65,7 +65,7 @@ const slidesConfig = {
   ],
   collections: [
     {
-      image: '/images/vii.jpeg',
+      image: '/images/viii.jpeg',
       subtitle: '💎 DAINTY CURATIONS',
       title: 'Studs & Chain Suites',
       description: 'Complete 3-pair matching ear stack sets.'
@@ -198,7 +198,7 @@ export default function HeroSlideshow({ category, collection }) {
             <span className="promo-shop-now-link">SHOP NOW</span>
           </div>
           <img
-            src="/images/ii.jpeg"
+            src="/images/hero_rings.png"
             alt="Stainless Steel Collection"
             className="bottom-promo-img"
           />
@@ -215,7 +215,7 @@ export default function HeroSlideshow({ category, collection }) {
             <span className="promo-shop-now-link">SHOP NOW</span>
           </div>
           <img
-            src="/images/v.jpeg"
+            src="/images/hero_home_luxury.png"
             alt="Titanium Collection"
             className="bottom-promo-img"
           />
@@ -232,7 +232,7 @@ export default function HeroSlideshow({ category, collection }) {
             <span className="promo-shop-now-link">SHOP NOW</span>
           </div>
           <img
-            src="/images/vi.jpeg"
+            src="/images/hero_home_earrings.png"
             alt="Full Collection"
             className="bottom-promo-img"
           />

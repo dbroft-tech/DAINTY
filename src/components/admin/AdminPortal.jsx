@@ -109,7 +109,8 @@ const STUDIO_IMAGE_PRESETS = [
   { label: 'Pavé Clicker', url: '/images/iii.jpeg' },
   { label: 'Ring & Chain', url: '/images/iv.jpeg' },
   { label: 'Chain Drape Ring', url: '/images/v.jpeg' },
-  { label: 'Marquise Cluster', url: '/images/vii.jpeg' }
+  { label: 'Marquise Cluster', url: '/images/vii.jpeg' },
+  { label: 'Earring Set', url: '/images/viii.jpeg' }
 ];
 
 // Custom Tooltip for Spline Chart (Matches dark floating tooltip in five.webp)
@@ -2662,7 +2663,7 @@ function ProductFormModal({ product, onClose, onSave }) {
                     <div className="relative">
                       <input
                         type="url"
-                        placeholder="/images/vi.jpeg"
+                        placeholder="https://images.unsplash.com/photo-..."
                         value={imagePreview.startsWith('data:') ? '' : imagePreview}
                         onChange={(e) => handleImageUrlChange(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-[#b38728] focus:bg-white font-mono text-gray-700"
