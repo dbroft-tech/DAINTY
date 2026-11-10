@@ -156,7 +156,7 @@ export default function ContactView() {
         {/* Map Location Card */}
         <div style={{ width: '100%', height: '350px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #eae6e1', marginTop: '4rem', position: 'relative' }}>
           <img 
-            src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1200&auto=format&fit=crop&q=80" 
+            src="/images/0.jpeg" 
             alt="Kampala Location" 
             style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.65) sepia(0.25) contrast(1.1)' }}
           />

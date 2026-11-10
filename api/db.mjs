@@ -218,10 +218,8 @@ const DEFAULT_PRODUCTS = [
     featured: true, new_arrival: true, best_seller: true, limited_edition: false, clearance: false,
     tags: ['heart', 'love', 'gold chain', 'pendant'],
     images: [
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80',
+      '/images/iv.jpeg',
+      '/images/v.jpeg'
     ],
     created_at: new Date(Date.now() - 5 * 864e5).toISOString(),
   },
@@ -234,10 +232,8 @@ const DEFAULT_PRODUCTS = [
     featured: true, new_arrival: false, best_seller: true, limited_edition: false, clearance: false,
     tags: ['diamond', 'promise', 'wedding', 'silver ring'],
     images: [
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80',
+      '/images/i.jpeg',
+      '/images/ii.jpeg'
     ],
     created_at: new Date(Date.now() - 40 * 864e5).toISOString(),
   },
@@ -250,10 +246,8 @@ const DEFAULT_PRODUCTS = [
     featured: false, new_arrival: true, best_seller: true, limited_edition: false, clearance: false,
     tags: ['hoops', 'everyday', 'gold', 'minimalist'],
     images: [
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
+      '/images/iii.jpeg',
+      '/images/vi.jpeg'
     ],
     created_at: new Date(Date.now() - 10 * 864e5).toISOString(),
   },
@@ -266,10 +260,8 @@ const DEFAULT_PRODUCTS = [
     featured: true, new_arrival: true, best_seller: false, limited_edition: true, clearance: false,
     tags: ['pearl', 'choker', 'bridal', 'baroque'],
     images: [
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80',
+      '/images/iv.jpeg',
+      '/images/vii.jpeg'
     ],
     created_at: new Date(Date.now() - 12 * 864e5).toISOString(),
   },
@@ -282,10 +274,8 @@ const DEFAULT_PRODUCTS = [
     featured: true, new_arrival: false, best_seller: true, limited_edition: true, clearance: false,
     tags: ['watch', 'luxury', 'men watch', 'chronograph'],
     images: [
-      'https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
+      '/images/0.jpeg',
+      '/images/vi.jpeg'
     ],
     created_at: new Date(Date.now() - 25 * 864e5).toISOString(),
   },
@@ -298,10 +288,8 @@ const DEFAULT_PRODUCTS = [
     featured: true, new_arrival: true, best_seller: false, limited_edition: false, clearance: false,
     tags: ['couple ring', 'promise ring', 'wedding band', 'matching'],
     images: [
-      'https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80',
+      '/images/i.jpeg',
+      '/images/v.jpeg'
     ],
     created_at: new Date(Date.now() - 3 * 864e5).toISOString(),
   },
@@ -314,10 +302,8 @@ const DEFAULT_PRODUCTS = [
     featured: false, new_arrival: false, best_seller: true, limited_edition: false, clearance: false,
     tags: ['bracelet', 'chain', 'paperclip', 'gold links'],
     images: [
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80',
+      '/images/iv.jpeg',
+      '/images/v.jpeg'
     ],
     created_at: new Date(Date.now() - 45 * 864e5).toISOString(),
   },
@@ -330,10 +316,8 @@ const DEFAULT_PRODUCTS = [
     featured: true, new_arrival: false, best_seller: false, limited_edition: true, clearance: false,
     tags: ['sapphire', 'wedding ring', 'diamonds', 'luxury'],
     images: [
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80',
+      '/images/ii.jpeg',
+      '/images/iii.jpeg'
     ],
     created_at: new Date(Date.now() - 15 * 864e5).toISOString(),
   },
@@ -346,10 +330,8 @@ const DEFAULT_PRODUCTS = [
     featured: false, new_arrival: true, best_seller: false, limited_edition: false, clearance: true,
     tags: ['ear cuff', 'no piercing', 'emerald', 'gift under 50k'],
     images: [
-      'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
+      '/images/iii.jpeg',
+      '/images/vii.jpeg'
     ],
     created_at: new Date(Date.now() - 2 * 864e5).toISOString(),
   },
@@ -362,10 +344,8 @@ const DEFAULT_PRODUCTS = [
     featured: true, new_arrival: false, best_seller: false, limited_edition: false, clearance: false,
     tags: ['box', 'organizer', 'velvet', 'storage'],
     images: [
-      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80',
+      '/images/0.jpeg',
+      '/images/vi.jpeg'
     ],
     created_at: new Date(Date.now() - 60 * 864e5).toISOString(),
   },

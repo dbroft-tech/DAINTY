@@ -133,7 +133,7 @@ export default function ProductDetailView({ routeParams, onAddToBag }) {
           {/* Main Display */}
           <div className="detail-main-img-wrapper">
             <img 
-              src={activeImages[selectedImageIdx] || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80'} 
+              src={activeImages[selectedImageIdx] || '/images/vi.jpeg'} 
               alt={name} 
               className="detail-main-img" 
             />

@@ -14,23 +14,24 @@ const POSSIBLE_PERSISTENT_DIRS = [
   __dirname
 ].filter(Boolean);
 
-function getFilePath(filename) {
-  // First check if persistent directory already has the file
-  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
-    try {
-      if (existsSync(dir)) {
-        const candidate = resolve(dir, filename);
-        if (existsSync(candidate)) return candidate;
-      }
-    } catch {}
-  }
-  return resolve(__dirname, filename);
-}
-
-const PRODUCTS_DB_PATH = getFilePath('products_db.json');
-const DELETED_IDS_PATH = getFilePath('deleted_ids.json');
 
 // Helper to read and write database with persistent mirroring
+function sanitizeImages(all) {
+  if (!Array.isArray(all)) return [];
+  return all.map(p => {
+    if (!p) return p;
+    if (Array.isArray(p.images)) {
+      p.images = p.images.map(img => {
+        if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://') || img.includes('unsplash.com'))) {
+          return '/images/vi.jpeg';
+        }
+        return img;
+      });
+    }
+    return p;
+  });
+}
+
 function getDeletedIds() {
   for (const dir of POSSIBLE_PERSISTENT_DIRS) {
     try {
@@ -70,7 +71,8 @@ function getDbProducts() {
           const content = readFileSync(target, 'utf-8');
           const all = JSON.parse(content);
           if (Array.isArray(all)) {
-            return all.filter(p => p && p.id && !deletedSet.has(p.id));
+            const sanitized = sanitizeImages(all);
+            return sanitized.filter(p => p && p.id && !deletedSet.has(p.id));
           }
         }
       }

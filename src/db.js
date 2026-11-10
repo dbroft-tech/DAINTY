@@ -124,11 +124,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
     images: [
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80'
+      '/images/iv.jpeg',
+      '/images/v.jpeg'
     ],
     tags: ['heart', 'love', 'gold chain', 'pendant']
   },
@@ -153,11 +150,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80'
+      '/images/i.jpeg',
+      '/images/ii.jpeg'
     ],
     tags: ['diamond', 'promise', 'wedding', 'silver ring']
   },
@@ -182,11 +176,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80'
+      '/images/iii.jpeg',
+      '/images/vi.jpeg'
     ],
     tags: ['hoops', 'everyday', 'gold', 'minimalist']
   },
@@ -211,11 +202,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80'
+      '/images/iv.jpeg',
+      '/images/vii.jpeg'
     ],
     tags: ['pearl', 'choker', 'bridal', 'baroque']
   },
@@ -240,11 +228,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80'
+      '/images/0.jpeg',
+      '/images/vi.jpeg'
     ],
     tags: ['watch', 'luxury', 'men watch', 'chronograph']
   },
@@ -269,11 +254,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80'
+      '/images/i.jpeg',
+      '/images/v.jpeg'
     ],
     tags: ['couple ring', 'promise ring', 'wedding band', 'matching']
   },
@@ -298,11 +280,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80'
+      '/images/iv.jpeg',
+      '/images/v.jpeg'
     ],
     tags: ['bracelet', 'chain', 'paperclip', 'gold links']
   },
@@ -327,11 +306,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80'
+      '/images/ii.jpeg',
+      '/images/iii.jpeg'
     ],
     tags: ['sapphire', 'wedding ring', 'diamonds', 'luxury']
   },
@@ -356,11 +332,8 @@ const defaultProducts = [
     clearance: true,
     created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80'
+      '/images/iii.jpeg',
+      '/images/vii.jpeg'
     ],
     tags: ['ear cuff', 'no piercing', 'emerald', 'gift under 50k']
   },
@@ -385,11 +358,8 @@ const defaultProducts = [
     clearance: false,
     created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
     images: [
-      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80'
+      '/images/0.jpeg',
+      '/images/vi.jpeg'
     ],
     tags: ['box', 'organizer', 'velvet', 'storage']
   },
@@ -697,13 +667,35 @@ export async function syncProductsWithServer() {
   }
 }
 
+// Sanitize images to strictly enforce local public/images/ assets only
+export function sanitizeProductImages(prods) {
+  if (!Array.isArray(prods)) return [];
+  return prods.map(p => {
+    if (!p) return p;
+    if (Array.isArray(p.images)) {
+      const cleanImgs = p.images.map(img => {
+        if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://') || img.includes('unsplash.com'))) {
+          return '/images/vi.jpeg';
+        }
+        return img;
+      });
+      return { ...p, images: cleanImgs };
+    }
+    return p;
+  });
+}
+
 // Initialization
 export function initDB() {
   const deletedSet = getDeletedProductIds();
   const existingProds = getStorageItem('products', null);
   if (!existingProds) {
     const initialList = defaultProducts.filter(p => !deletedSet.has(p.id));
-    setStorageItem('products', initialList);
+    setStorageItem('products', sanitizeProductImages(initialList));
+  } else {
+    // Proactively clean any legacy public image URLs from previous user sessions
+    const sanitized = sanitizeProductImages(existingProds);
+    setStorageItem('products', sanitized);
   }
   if (!localStorage.getItem(STORAGE_PREFIX + 'orders')) {
     setStorageItem('orders', []);
@@ -746,7 +738,8 @@ export function getProducts() {
   const deletedSet = getDeletedProductIds();
   const prods = getStorageItem('products', null);
   const base = Array.isArray(prods) ? prods : defaultProducts;
-  return base.filter(p => p && p.id && !deletedSet.has(p.id));
+  const filtered = base.filter(p => p && p.id && !deletedSet.has(p.id));
+  return sanitizeProductImages(filtered);
 }
 
 export async function saveProduct(product) {

@@ -2662,7 +2662,7 @@ function ProductFormModal({ product, onClose, onSave }) {
                     <div className="relative">
                       <input
                         type="url"
-                        placeholder="https://images.unsplash.com/photo-..."
+                        placeholder="/images/vi.jpeg"
                         value={imagePreview.startsWith('data:') ? '' : imagePreview}
                         onChange={(e) => handleImageUrlChange(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-[#b38728] focus:bg-white font-mono text-gray-700"

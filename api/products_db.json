@@ -20,9 +20,9 @@
     "clearance": false,
     "created_at": "2026-11-01T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1611085583191-a3b1a30a5a40?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "heart",
@@ -52,9 +52,9 @@
     "clearance": false,
     "created_at": "2026-09-27T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "diamond",
@@ -84,8 +84,8 @@
     "clearance": false,
     "created_at": "2026-10-27T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "hoops",
@@ -115,8 +115,8 @@
     "clearance": false,
     "created_at": "2026-10-25T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "pearl",
@@ -146,8 +146,8 @@
     "clearance": false,
     "created_at": "2026-10-12T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "watch",
@@ -177,8 +177,8 @@
     "clearance": false,
     "created_at": "2026-11-03T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1543294001-f7cbfe92237e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "couple ring",
@@ -208,8 +208,8 @@
     "clearance": false,
     "created_at": "2026-09-22T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "bracelet",
@@ -239,8 +239,8 @@
     "clearance": false,
     "created_at": "2026-10-22T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "sapphire",
@@ -270,8 +270,8 @@
     "clearance": true,
     "created_at": "2026-11-04T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "ear cuff",
@@ -301,8 +301,8 @@
     "clearance": false,
     "created_at": "2026-09-07T12:00:00.000Z",
     "images": [
-      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&auto=format&fit=crop&q=80"
+      "/images/vi.jpeg",
+      "/images/vi.jpeg"
     ],
     "tags": [
       "box",
