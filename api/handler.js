@@ -115,12 +115,13 @@ export async function handleApiRequest(req, res, customEnv = {}) {
   const WEBHOOK_URL = env.RELWORX_WEBHOOK_URL;
 
   const url = new URL(req.url, 'http://localhost');
+  const pathname = (url.pathname || '/').replace(/\/+$/, '') || '/';
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
       'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'GET, POST, DELETE, OPTIONS',
-      'access-control-allow-headers': 'Content-Type'
+      'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'access-control-allow-headers': 'Content-Type, Authorization, X-Requested-With'
     });
     res.end();
     return;
@@ -128,53 +129,102 @@ export async function handleApiRequest(req, res, customEnv = {}) {
 
   try {
     // =========================================================================
-    // PRODUCTS DATABASE REST ENDPOINTS
+    // DATABASE STATUS & HEALTH ENDPOINTS (Fixes Hostinger /api/database/status)
+    // =========================================================================
+    if (pathname === '/api/database/status' || pathname === '/api/db_status' || pathname === '/api/status') {
+      const prods = getDbProducts();
+      return send(res, 200, {
+        status: 'connected',
+        driver: 'Node.js 22 Hostinger Persistent Server Database',
+        products_count: prods.length,
+        persistent: true,
+        online: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if ((req.method === 'POST' || req.method === 'PUT') && (pathname === '/api/database/config' || pathname === '/api/db_config')) {
+      const config = await readJson(req);
+      try {
+        const publicConfigPath = resolve(__dirname, '../public/api/db_config.json');
+        writeFileSync(publicConfigPath, JSON.stringify(config, null, 2), 'utf-8');
+      } catch (err) {
+        console.warn('Could not write public/api/db_config.json:', err);
+      }
+      return send(res, 200, {
+        success: true,
+        message: 'Database configuration saved successfully.'
+      });
+    }
+
+    // =========================================================================
+    // PRODUCTS DATABASE REST ENDPOINTS (GET, POST, PUT, DELETE, RESET)
     // =========================================================================
     
     // GET /api/products -> Retrieve all stored products
-    if (req.method === 'GET' && url.pathname === '/api/products') {
+    if (req.method === 'GET' && pathname === '/api/products') {
       const products = getDbProducts();
       return send(res, 200, products);
     }
 
-    // POST /api/products -> Create or update product
-    if (req.method === 'POST' && url.pathname === '/api/products') {
-      const product = await readJson(req);
-      if (!product || !product.name) {
-        return send(res, 400, { error: 'Product name is required.' });
-      }
-
-      if (product.id) {
-        const deletedIds = getDeletedIds();
-        if (deletedIds.includes(product.id)) {
-          saveDeletedIds(deletedIds.filter(id => id !== product.id));
-        }
-      } else {
-        product.id = 'prod_' + Math.random().toString(36).substr(2, 9);
-        product.created_at = new Date().toISOString();
-      }
-
+    // GET /api/products/:id -> Retrieve a single product by ID
+    if (req.method === 'GET' && pathname.startsWith('/api/products/')) {
+      const productId = pathname.replace('/api/products/', '').trim();
       const products = getDbProducts();
-      const idx = products.findIndex(p => p.id === product.id);
-      if (idx !== -1) {
-        products[idx] = { ...products[idx], ...product };
-      } else {
-        // Prepend so new items appear first
-        products.unshift(product);
+      const found = products.find(p => p.id === productId);
+      if (found) {
+        return send(res, 200, found);
       }
+      return send(res, 404, { error: `Product ${productId} not found.` });
+    }
 
-      saveDbProducts(products);
-      return send(res, 200, product);
+    // POST or PUT /api/products or /api/products/:id -> Create or update product
+    if ((req.method === 'POST' || req.method === 'PUT') && (pathname === '/api/products' || pathname.startsWith('/api/products/'))) {
+      if (pathname === '/api/products/reset') {
+        // Fall through to reset handler below
+      } else {
+        const product = await readJson(req);
+        if (!product || (!product.name && !product.title)) {
+          return send(res, 400, { error: 'Product name is required.' });
+        }
+
+        // Check if ID is in URL
+        const idFromUrl = pathname.startsWith('/api/products/') ? pathname.replace('/api/products/', '').trim() : '';
+        if (idFromUrl && !product.id) {
+          product.id = idFromUrl;
+        }
+
+        if (product.id) {
+          const deletedIds = getDeletedIds();
+          if (deletedIds.includes(product.id)) {
+            saveDeletedIds(deletedIds.filter(id => id !== product.id));
+          }
+        } else {
+          product.id = 'prod_' + Math.random().toString(36).substr(2, 9);
+          product.created_at = new Date().toISOString();
+        }
+
+        const products = getDbProducts();
+        const idx = products.findIndex(p => p.id === product.id);
+        if (idx !== -1) {
+          products[idx] = { ...products[idx], ...product };
+        } else {
+          products.unshift(product);
+        }
+
+        saveDbProducts(products);
+        return send(res, 200, product);
+      }
     }
 
     // DELETE /api/products/:id -> Delete a product by ID permanently
-    if (req.method === 'DELETE' && url.pathname.startsWith('/api/products/')) {
-      const productId = url.pathname.replace('/api/products/', '').trim();
+    if (req.method === 'DELETE' && pathname.startsWith('/api/products/')) {
+      const productId = pathname.replace('/api/products/', '').trim();
       if (!productId) {
         return send(res, 400, { error: 'Product ID required' });
       }
       
-      // Add to deleted IDs blacklist
+      // Add to permanent deleted IDs blacklist
       const deletedIds = getDeletedIds();
       if (!deletedIds.includes(productId)) {
         deletedIds.push(productId);
@@ -188,38 +238,12 @@ export async function handleApiRequest(req, res, customEnv = {}) {
     }
 
     // POST /api/products/reset -> Reset database
-    if (req.method === 'POST' && url.pathname === '/api/products/reset') {
+    if (req.method === 'POST' && pathname === '/api/products/reset') {
       const resetProducts = await readJson(req);
       saveDeletedIds([]); // Clear deleted blacklist on explicit reset
       const toSave = Array.isArray(resetProducts) && resetProducts.length > 0 ? resetProducts : getDbProducts();
       saveDbProducts(toSave);
       return send(res, 200, { success: true, count: toSave.length });
-    }
-
-    // GET /api/database/status -> Database health & status
-    if (req.method === 'GET' && (url.pathname === '/api/database/status' || url.pathname === '/api/db_status')) {
-      const prods = getDbProducts();
-      return send(res, 200, {
-        status: 'connected',
-        driver: 'Live Cloud & Hostinger Server Database',
-        products_count: prods.length,
-        persistent: true
-      });
-    }
-
-    // POST /api/database/config -> Save Hostinger MySQL Database credentials
-    if (req.method === 'POST' && (url.pathname === '/api/database/config' || url.pathname === '/api/db_config')) {
-      const config = await readJson(req);
-      try {
-        const publicConfigPath = resolve(__dirname, '../public/api/db_config.json');
-        writeFileSync(publicConfigPath, JSON.stringify(config, null, 2), 'utf-8');
-      } catch (err) {
-        console.warn('Could not write public/api/db_config.json:', err);
-      }
-      return send(res, 200, {
-        success: true,
-        message: 'Database configuration saved successfully.'
-      });
     }
 
     // =========================================================================
