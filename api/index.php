@@ -574,6 +574,13 @@ if ($endpoint === 'relworx/test-connection' && $method === 'POST') {
     exit;
 }
 
+// ROUTE: POST /api/relworx/webhook -> Always acknowledge 200 so Relworx never retries
+if ($endpoint === 'relworx/webhook') {
+    http_response_code(200);
+    echo json_encode(['received' => true, 'timestamp' => time()]);
+    exit;
+}
+
 // ROUTE: POST /api/relworx/mobile-money/request-payment -> Initiate USSD push
 if ($endpoint === 'relworx/mobile-money/request-payment' && $method === 'POST') {
     $cfg = getRelworxPhpConfig();
@@ -587,6 +594,19 @@ if ($endpoint === 'relworx/mobile-money/request-payment' && $method === 'POST') 
         echo json_encode(['error' => 'Invalid phone, amount, or payment reference.']);
         exit;
     }
+
+    // Debounce duplicate prompts within 10 seconds for the same phone number
+    $lockFile = sys_get_temp_dir() . '/relworx_lock_' . md5($msisdn) . '.txt';
+    $now = time();
+    if (file_exists($lockFile)) {
+        $lastTime = (int)@file_get_contents($lockFile);
+        if (($now - $lastTime) < 10) {
+            http_response_code(429);
+            echo json_encode(['error' => 'A payment prompt was just sent to your phone. Please check your handset or wait a few seconds before trying again.']);
+            exit;
+        }
+    }
+    @file_put_contents($lockFile, (string)$now);
 
     $result = callRelworxCurl('/mobile-money/request-payment', 'POST', [
         'msisdn' => $msisdn,
@@ -612,8 +632,16 @@ if ($endpoint === 'relworx/mobile-money/check-request-status' && $method === 'GE
 
     $path = '/mobile-money/check-request-status?internal_reference=' . urlencode($internalRef) . '&account_no=' . urlencode($cfg['accountNo']);
     $result = callRelworxCurl($path, 'GET', null, $cfg);
-    if (isset($result['status']) && strtolower($result['status']) === 'success') {
+    $raw = strtolower((string)($result['status'] ?? ($result['request_status'] ?? '')));
+    if ($raw === 'success' || $raw === 'successful') {
         $result['status'] = 'successful';
+    } elseif ($raw === 'failed' || $raw === 'declined' || $raw === 'cancelled' || $raw === 'canceled' || $raw === 'rejected' || $raw === 'expired' || (isset($result['success']) && $result['success'] === false)) {
+        $result['status'] = 'failed';
+        if (empty($result['message'])) {
+            $result['message'] = ($raw === 'insufficient_balance' || $raw === 'insufficient_funds')
+                ? 'Insufficient balance in mobile money wallet.'
+                : 'Payment was declined or cancelled on handset.';
+        }
     }
     echo json_encode($result);
     exit;

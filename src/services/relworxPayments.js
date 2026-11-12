@@ -167,11 +167,11 @@ export async function validateMobileNumber(msisdn) {
  * @param {Function} [onStatusUpdate]- Callback(status, attempt) on each poll
  * @returns {Promise<{ status: 'successful'|'failed'|'timeout', reference: string, internal_reference: string }>}
  */
-export async function processFullPayment(params, onStatusUpdate) {
+export async function processFullPayment(params, onStatusUpdate, abortSignal) {
   const POLL_INTERVAL_MS = 5000;
   const MAX_POLLS        = 12;
 
-  // Step 1 — Initiate payment (push USSD to customer)
+  // Step 1 — Initiate payment (push USSD to customer exactly once)
   const initResponse = await requestMobileMoneyPayment(params);
 
   if (!initResponse.success) {
@@ -180,9 +180,17 @@ export async function processFullPayment(params, onStatusUpdate) {
 
   const internalRef = initResponse.internal_reference;
 
-  // Step 2 — Poll for confirmation
+  // Step 2 — Poll for confirmation until terminal status (success/failed) or abort
   for (let attempt = 1; attempt <= MAX_POLLS; attempt++) {
+    if (abortSignal && abortSignal.aborted) {
+      return { status: 'cancelled', reference: params.reference, internal_reference: internalRef };
+    }
+
     await delay(POLL_INTERVAL_MS);
+
+    if (abortSignal && abortSignal.aborted) {
+      return { status: 'cancelled', reference: params.reference, internal_reference: internalRef };
+    }
 
     let statusResponse;
     try {
@@ -193,16 +201,32 @@ export async function processFullPayment(params, onStatusUpdate) {
       continue;
     }
 
-    const status = (statusResponse.status || '').toLowerCase();
-    if (onStatusUpdate) onStatusUpdate(status, attempt);
+    const rawStatus = (statusResponse.status || statusResponse.request_status || '').toLowerCase();
+    const isSuccess = rawStatus === 'successful' || rawStatus === 'success';
+    const isFailed = (
+      rawStatus === 'failed' ||
+      rawStatus === 'declined' ||
+      rawStatus === 'cancelled' ||
+      rawStatus === 'canceled' ||
+      rawStatus === 'rejected' ||
+      rawStatus === 'expired' ||
+      rawStatus === 'insufficient_funds' ||
+      rawStatus === 'insufficient_balance' ||
+      statusResponse.success === false
+    );
 
-    if (status === 'successful') {
+    if (isSuccess) {
+      if (onStatusUpdate) onStatusUpdate('successful', attempt);
       return { status: 'successful', reference: params.reference, internal_reference: internalRef };
     }
-    if (status === 'failed') {
-      return { status: 'failed', reference: params.reference, internal_reference: internalRef, message: statusResponse.message };
+
+    if (isFailed) {
+      const failReason = statusResponse.message || statusResponse.error || 'Payment was declined or cancelled on your handset.';
+      if (onStatusUpdate) onStatusUpdate('failed', attempt, failReason);
+      return { status: 'failed', reference: params.reference, internal_reference: internalRef, message: failReason };
     }
-    // 'pending' → keep polling
+
+    if (onStatusUpdate) onStatusUpdate('polling', attempt);
   }
 
   // Timeout after 60 seconds

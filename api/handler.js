@@ -554,12 +554,21 @@ export async function handleApiRequest(req, res, customEnv = {}) {
 
     // POST /api/relworx/webhook -> Relworx transaction callback webhook
     if (req.method === 'POST' && pathname === '/api/relworx/webhook') {
-      const data = await readJson(req);
-      if (!validWebhook(req, data, { webhookKey: WEBHOOK_KEY, webhookUrl: WEBHOOK_URL })) {
-        return send(res, 401, { error: 'Invalid webhook signature or webhook URL configuration.' });
-      }
-      console.info('Verified Relworx webhook', JSON.stringify({ status: data.status, customer_reference: data.customer_reference, internal_reference: data.internal_reference }));
+      try {
+        const data = await readJson(req);
+        console.info('Received Relworx webhook callback:', JSON.stringify({
+          status: data.status,
+          customer_reference: data.customer_reference,
+          internal_reference: data.internal_reference
+        }));
+      } catch {}
+      // Always acknowledge HTTP 200 immediately to prevent Relworx from retrying
       return send(res, 200, { received: true });
+    }
+
+    // Rate-limiting / debounce cache for payment requests
+    if (!globalThis.__recentPaymentRequests) {
+      globalThis.__recentPaymentRequests = new Map();
     }
 
     // POST /api/relworx/mobile-money/request-payment -> Initiate USSD prompt to customer
@@ -569,6 +578,17 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       if (!/^\+256\d{9}$/.test(msisdn || '') || !Number.isFinite(Number(amount)) || Number(amount) < 500 || Number(amount) > 5_000_000 || !/^[A-Za-z0-9]{8,36}$/.test(reference || '')) {
         return send(res, 400, { error: 'Invalid phone, amount, or payment reference.' });
       }
+
+      // Check if a payment request was already fired to this number in the last 10 seconds
+      const now = Date.now();
+      const lastSent = globalThis.__recentPaymentRequests.get(msisdn);
+      if (lastSent && (now - lastSent < 10000)) {
+        return send(res, 429, { 
+          error: 'A payment prompt was just sent to your phone. Please check your handset or wait a few seconds before trying again.' 
+        });
+      }
+      globalThis.__recentPaymentRequests.set(msisdn, now);
+
       const result = await callRelworx('/mobile-money/request-payment', 'POST', {
         msisdn,
         amount: Number(amount),
@@ -587,7 +607,22 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       }
       const query = new URLSearchParams({ internal_reference: internalReference, account_no: ACCOUNT_NO || '' });
       const result = await callRelworx(`/mobile-money/check-request-status?${query}`, 'GET', null, { apiKey: API_KEY, accountNo: ACCOUNT_NO, baseUrl: BASE_URL });
-      if ((result.status || '').toLowerCase() === 'success') result.status = 'successful';
+      
+      const raw = (result.status || result.request_status || '').toLowerCase();
+      if (raw === 'success' || raw === 'successful') {
+        result.status = 'successful';
+      } else if (
+        raw === 'failed' || raw === 'declined' || raw === 'cancelled' || raw === 'canceled' ||
+        raw === 'rejected' || raw === 'expired' || raw === 'insufficient_funds' || raw === 'insufficient_balance' ||
+        result.success === false
+      ) {
+        result.status = 'failed';
+        if (!result.message) {
+          result.message = (raw.includes('insufficient') || (result.error || '').includes('insufficient'))
+            ? 'Insufficient balance in mobile money wallet.'
+            : 'Payment was cancelled or declined on phone.';
+        }
+      }
       return send(res, 200, result);
     }
 

@@ -42,7 +42,9 @@ function PaymentStatusModal({ status, pollAttempt, maxPolls, phone, network, err
     failed: {
       icon: <XCircle size={34} style={{ color: '#dc2626' }} />,
       title: 'Payment Failed',
-      subtitle: errorMessage || 'The payment could not be processed. Please check your wallet balance and try again.',
+      subtitle: errorMessage
+        ? `${errorMessage} The request has ended. No further prompts will be sent to your phone unless you try again.`
+        : 'The payment was not completed (declined, cancelled, or insufficient balance). No further prompts will be sent to your phone unless you try again.',
       color: '#dc2626', bg: 'rgba(220,38,38,0.08)',
     },
     timeout: {
@@ -211,6 +213,8 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
   const [secureSave, setSecureSave]       = useState(true);
   const MAX_POLLS = 12;
   const abortRef  = useRef(false);
+  const isSubmittingRef = useRef(false);
+  const activeAbortControllerRef = useRef(null);
 
   // Check Relworx configuration on mount
   useEffect(() => {
@@ -242,7 +246,19 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
   };
 
   const handleApplyCoupon = (code, pct) => { setCouponCode(code); setDiscountPercentage(pct); };
-  const resetModal = () => { setPaymentStatus(null); setPaymentError(''); setPollAttempt(0); setLoading(false); abortRef.current = false; };
+  
+  const resetModal = () => {
+    if (activeAbortControllerRef.current) {
+      activeAbortControllerRef.current.abort();
+      activeAbortControllerRef.current = null;
+    }
+    abortRef.current = true;
+    isSubmittingRef.current = false;
+    setPaymentStatus(null);
+    setPaymentError('');
+    setPollAttempt(0);
+    setLoading(false);
+  };
 
   // ── WhatsApp fallback ────────────────────────────────────
   const handleWhatsAppCheckout = () => {
@@ -263,8 +279,14 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
 
   // ── Relworx MoMo Submit ──────────────────────────────────
   const handleMobileMoneyCheckout = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (cart.length === 0) return;
+    
+    // Strict Guard: Prevent double-click or multiple simultaneous prompts
+    if (isSubmittingRef.current || loading) {
+      return;
+    }
+
     if (!selectedNetwork) { alert('Please select a payment network — MTN or Airtel.'); return; }
 
     const phoneToUse = momoPhone || checkoutData.phone;
@@ -277,6 +299,14 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
       return;
     }
 
+    // Cancel any active previous session
+    if (activeAbortControllerRef.current) {
+      activeAbortControllerRef.current.abort();
+    }
+    const abortCtrl = new AbortController();
+    activeAbortControllerRef.current = abortCtrl;
+
+    isSubmittingRef.current = true;
     abortRef.current = false;
     setLoading(true);
     setPaymentStatus('polling');
@@ -288,14 +318,21 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
     try {
       const result = await processFullPayment(
         { msisdn, amount: Math.round(cartTotal), reference: orderRef, description: `DAINTY Order – ${checkoutData.name}` },
-        (status, attempt) => {
-          if (abortRef.current) return;
+        (status, attempt, reason) => {
+          if (abortRef.current || abortCtrl.signal.aborted) return;
           setPollAttempt(attempt);
-          if (['successful', 'failed', 'timeout'].includes(status)) setPaymentStatus(status);
-        }
+          if (status === 'failed') {
+            abortCtrl.abort();
+            setPaymentStatus('failed');
+            if (reason) setPaymentError(reason);
+          } else if (status === 'successful' || status === 'timeout') {
+            setPaymentStatus(status);
+          }
+        },
+        abortCtrl.signal
       );
 
-      if (abortRef.current) return;
+      if (abortRef.current || abortCtrl.signal.aborted) return;
       setPaymentStatus(result.status);
 
       if (result.status === 'successful') {
@@ -318,17 +355,18 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
         onClearCart();
         setOrderPlaced(newOrder);
       } else if (result.status === 'failed') {
-        setPaymentError(result.message || 'Payment was declined or cancelled on your handset.');
+        setPaymentError(result.message || 'Payment was declined, cancelled, or has insufficient balance.');
       }
     } catch (err) {
-      if (abortRef.current) return;
+      if (abortRef.current || abortCtrl.signal.aborted) return;
       console.error('[Relworx]', err);
       const msg = err.message || 'Payment initiation failed.';
       setPaymentError(msg);
       const isConfigIssue = msg.toLowerCase().includes('not configured') || msg.toLowerCase().includes('credentials') || msg.toLowerCase().includes('api key');
       setPaymentStatus(isConfigIssue ? 'not_configured' : 'failed');
     } finally {
-      if (!abortRef.current) setLoading(false);
+      isSubmittingRef.current = false;
+      setLoading(false);
     }
   };
 
