@@ -96,7 +96,27 @@ function PaymentStatusModal({ status, pollAttempt, maxPolls, phone, network, err
           {c.icon}
         </div>
         <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1c1917', marginBottom: '0.6rem' }}>{c.title}</h3>
-        <p style={{ fontSize: '0.84rem', color: '#78716c', lineHeight: '1.65', marginBottom: '1.4rem' }}>{c.subtitle}</p>
+        <p style={{ fontSize: '0.84rem', color: '#78716c', lineHeight: '1.65', marginBottom: '1.2rem' }}>{c.subtitle}</p>
+
+        {/* Actionable guidance if API key is not mapped to the business account in Relworx */}
+        {errorMessage && errorMessage.toLowerCase().includes('authorized to access this business account') && (
+          <div style={{
+            background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px',
+            padding: '0.85rem 1rem', textAlign: 'left', marginBottom: '1.3rem',
+            fontSize: '0.78rem', color: '#92400e', lineHeight: '1.55'
+          }}>
+            <strong style={{ display: 'block', marginBottom: '0.35rem', color: '#78350f', fontSize: '0.82rem' }}>
+              How to fix this in Relworx:
+            </strong>
+            <ol style={{ paddingLeft: '1.2rem', margin: 0 }}>
+              <li>Log into <strong>payments.relworx.com</strong></li>
+              <li>Go to <strong>Organizations</strong> &rarr; Click <strong>View</strong> on DAINTY STUDS AND CHAINS</li>
+              <li>Click <strong>API Keys</strong> &rarr; Click <strong>Edit</strong> on your API key</li>
+              <li>Under <strong>Business account</strong>, select/check <strong>REL11AE925B85</strong></li>
+              <li>Click <strong>Update</strong> to save, then try again</li>
+            </ol>
+          </div>
+        )}
 
         {/* Progress bar during polling */}
         {status === 'polling' && (
@@ -116,7 +136,7 @@ function PaymentStatusModal({ status, pollAttempt, maxPolls, phone, network, err
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-          {(status === 'failed' || status === 'timeout') && onRetry && (
+          {(status === 'failed' || status === 'timeout' || status === 'not_configured') && onRetry && (
             <button onClick={onRetry} style={{
               background: 'linear-gradient(135deg,#1c1917,#3c3530)', color: '#fff',
               border: 'none', borderRadius: '10px', padding: '0.75rem 1.5rem',

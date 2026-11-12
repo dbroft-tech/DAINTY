@@ -2440,7 +2440,9 @@ export default function AdminPortal({ onLogout } = {}) {
                         placeholder={relworxGatewayStatus.masked_key ? `Current: ${relworxGatewayStatus.masked_key} (Enter new key to change)` : 'relworx_live_... or API key'}
                         className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-800 outline-none focus:border-[#b38728]"
                       />
-                      <p className="text-[10px] text-gray-400 mt-1">Rotated API key from Relworx Developer Settings. Saved securely on the server.</p>
+                      <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
+                        API key from Relworx Organizations &rarr; API Keys. <strong>Note:</strong> In Relworx, make sure to <strong>Edit</strong> your API key and link/check <strong>REL11AE925B85</strong> under Business Accounts!
+                      </p>
                     </div>
 
                     <div>

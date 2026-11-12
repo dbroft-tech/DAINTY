@@ -505,9 +505,13 @@ export async function handleApiRequest(req, res, customEnv = {}) {
         });
 
         if (response.status === 401 || response.status === 403) {
+          const respText = await response.text();
+          let parsed;
+          try { parsed = JSON.parse(respText); } catch {}
+          const errorMsg = parsed?.message || parsed?.error || 'Authentication failed with Relworx. The API key is invalid or unauthorized.';
           return send(res, 401, {
             success: false,
-            error: 'Authentication failed with Relworx. The API key is invalid or unauthorized.'
+            error: errorMsg
           });
         }
 

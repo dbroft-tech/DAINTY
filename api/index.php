@@ -555,8 +555,10 @@ if ($endpoint === 'relworx/test-connection' && $method === 'POST') {
     }
 
     if ($status === 401 || $status === 403) {
+        $parsed = json_decode($raw, true);
+        $msg = !empty($parsed['message']) ? $parsed['message'] : (!empty($parsed['error']) ? $parsed['error'] : 'Authentication failed with Relworx. The API key is invalid or unauthorized.');
         http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'Authentication failed with Relworx. The API key is invalid or unauthorized.']);
+        echo json_encode(['success' => false, 'error' => $msg]);
         exit;
     }
 
