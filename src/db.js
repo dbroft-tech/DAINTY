@@ -921,25 +921,62 @@ export function updateProductPrice(productId, newPrice, newSalePrice = null) {
 // Orders API
 export function getOrders() {
   initDB();
-  return getStorageItem('orders', []);
+  const localOrders = getStorageItem('orders', []);
+
+  // Background fetch to sync orders across all devices
+  fetch('/api/orders', { cache: 'no-store' })
+    .then(res => res.ok ? res.json() : null)
+    .then(serverOrders => {
+      if (Array.isArray(serverOrders) && serverOrders.length > 0) {
+        // Merge without duplicates (server orders take precedence)
+        const orderMap = new Map();
+        localOrders.forEach(o => { if (o && o.id) orderMap.set(o.id, o); });
+        serverOrders.forEach(o => { if (o && o.id) orderMap.set(o.id, o); });
+        const merged = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        setStorageItem('orders', merged);
+        window.dispatchEvent(new CustomEvent('dainty_orders_changed', { detail: merged }));
+      }
+    })
+    .catch(() => {});
+
+  return localOrders;
 }
 
 export function saveOrder(orderData) {
   const orders = getOrders();
   const newOrder = {
-    id: 'ord_' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-    customer_name: orderData.name,
-    customer_email: orderData.email,
-    customer_phone: orderData.phone,
-    delivery_address: orderData.address,
+    id: orderData.id || `ORD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+    customer_name: orderData.name || orderData.customer_name || 'Customer',
+    customer_email: orderData.email || orderData.customer_email || '',
+    customer_phone: orderData.phone || orderData.customer_phone || orderData.momo_phone || '',
+    delivery_address: orderData.address || orderData.delivery_address || 'Kampala, Uganda',
     notes: orderData.notes || '',
-    items: orderData.items, // Array of { product_id, name, quantity, color, price }
-    total_amount: orderData.total_amount,
-    status: 'Pending',
+    payment_method: orderData.payment_method || 'Mobile Money (Relworx)',
+    momo_phone: orderData.momo_phone || '',
+    momo_network: orderData.momo_network || '',
+    relworx_reference: orderData.relworx_reference || '',
+    relworx_internal_reference: orderData.relworx_internal_reference || '',
+    items: Array.isArray(orderData.items) ? orderData.items : [],
+    total_amount: Number(orderData.total_amount) || 0,
+    discount_applied: Number(orderData.discount_applied) || 0,
+    coupon_code: orderData.coupon_code || '',
+    status: orderData.status || 'Pending',
     created_at: new Date().toISOString()
   };
-  orders.push(newOrder);
+
+  orders.unshift(newOrder);
   setStorageItem('orders', orders);
+
+  // Synchronize order with the server so all devices see the order immediately
+  fetch('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newOrder)
+  }).catch(err => console.warn('Could not post order to server:', err));
+
+  // Dispatch events for immediate multi-component re-renders
+  window.dispatchEvent(new CustomEvent('dainty_orders_changed', { detail: orders }));
+  window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_PREFIX + 'orders', newValue: JSON.stringify(orders) }));
 
   // Reduce product stock
   const products = getProducts();
@@ -959,7 +996,18 @@ export function updateOrderStatus(orderId, status) {
   const idx = orders.findIndex(o => o.id === orderId);
   if (idx !== -1) {
     orders[idx].status = status;
+    orders[idx].updated_at = new Date().toISOString();
     setStorageItem('orders', orders);
+
+    // Sync status with server
+    fetch(`/api/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).catch(err => console.warn('Could not sync order status to server:', err));
+
+    window.dispatchEvent(new CustomEvent('dainty_orders_changed', { detail: orders }));
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_PREFIX + 'orders', newValue: JSON.stringify(orders) }));
     return orders[idx];
   }
   return null;

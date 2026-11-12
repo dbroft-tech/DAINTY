@@ -64,24 +64,33 @@ export function detectMobileNetwork(phone) {
 // Core Fetch Wrapper
 // ────────────────────────────────────────────────────────────
 async function relworxFetch(path, options = {}) {
-  const res = await fetch(`/api/relworx${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
+  let res;
+  try {
+    res = await fetch(`/api/relworx${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+    });
+  } catch (networkErr) {
+    throw new Error(`Payment server could not be reached: ${networkErr.message}`);
+  }
 
+  const rawText = await res.text();
   let data;
   try {
-    data = await res.json();
+    data = JSON.parse(rawText);
   } catch {
-    throw new Error(`Relworx returned an invalid response (HTTP ${res.status})`);
+    if (rawText.trim().startsWith('<!DOCTYPE') || rawText.includes('<html')) {
+      throw new Error(`Payment API route not reached (HTTP ${res.status}): Server returned an HTML web page instead of JSON. Ensure your server.js or api/index.php is running on your host.`);
+    }
+    throw new Error(`Relworx API returned an invalid response (HTTP ${res.status}): ${rawText.slice(0, 100)}`);
   }
 
   if (!res.ok) {
-    const message = data?.message || data?.error || `HTTP ${res.status}`;
-    throw new Error(`Relworx API error: ${message}`);
+    const message = data?.error || data?.message || `HTTP ${res.status}`;
+    throw new Error(message);
   }
 
   return data;
@@ -223,6 +232,47 @@ function delay(ms) {
  */
 export function isRelworxConfigured() {
   return true; // Server reports a clear configuration error when credentials are absent.
+}
+
+/**
+ * Checks server-side Relworx gateway configuration status.
+ */
+export async function getRelworxStatus() {
+  try {
+    const res = await fetch('/api/relworx/status');
+    if (!res.ok) return { configured: false };
+    return await res.json();
+  } catch {
+    return { configured: false };
+  }
+}
+
+/**
+ * Saves Relworx credentials to server persistent storage.
+ */
+export async function saveRelworxConfig(config) {
+  const res = await fetch('/api/relworx/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
+  return data;
+}
+
+/**
+ * Tests connectivity and authentication with Relworx servers.
+ */
+export async function testRelworxConnection(config) {
+  const res = await fetch('/api/relworx/test-connection', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
+  return data;
 }
 
 /**

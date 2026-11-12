@@ -37,7 +37,9 @@ import {
   AlertCircle,
   Phone,
   Package,
-  Coins
+  Coins,
+  Smartphone,
+  ShieldCheck
 } from 'lucide-react';
 import {
   LineChart,
@@ -66,6 +68,13 @@ import {
   subcategories,
   piercingLocations
 } from '../../db';
+import {
+  getRelworxStatus,
+  saveRelworxConfig,
+  testRelworxConnection,
+  MERCHANT_MTN_NUMBER,
+  MERCHANT_AIRTEL_NUMBER
+} from '../../services/relworxPayments';
 
 // Format helper for Ugandan Shilling
 function formatUGX(val) {
@@ -220,9 +229,39 @@ export default function AdminPortal({ onLogout } = {}) {
   const [dbPass, setDbPass] = useState('');
   const [dbConfigFeedback, setDbConfigFeedback] = useState(null);
 
+  // Relworx Payment Gateway State
+  const [relworxGatewayStatus, setRelworxGatewayStatus] = useState({
+    configured: false,
+    account_no: 'REL11AE925B85',
+    api_key_set: false,
+    masked_key: null,
+    base_url: 'https://payments.relworx.com/api',
+    webhook_url: 'https://daintystudsandchains.com/api/relworx/webhook',
+    merchant_mtn: MERCHANT_MTN_NUMBER,
+    merchant_airtel: MERCHANT_AIRTEL_NUMBER
+  });
+  const [relworxAccountNo, setRelworxAccountNo] = useState('REL11AE925B85');
+  const [relworxApiKey, setRelworxApiKey] = useState('');
+  const [relworxWebhookKey, setRelworxWebhookKey] = useState('424a7fe74781e4ecdcb8dfcbdb');
+  const [relworxBaseUrl, setRelworxBaseUrl] = useState('https://payments.relworx.com/api');
+  const [relworxFeedback, setRelworxFeedback] = useState(null);
+  const [isTestingRelworx, setIsTestingRelworx] = useState(false);
+  const [isSavingRelworx, setIsSavingRelworx] = useState(false);
+
   const showToast = (message) => {
     setToast(message);
     setTimeout(() => setToast(null), 3500);
+  };
+
+  const reloadRelworxStatus = async () => {
+    try {
+      const data = await getRelworxStatus();
+      if (data) {
+        setRelworxGatewayStatus(data);
+        if (data.account_no) setRelworxAccountNo(data.account_no);
+        if (data.base_url) setRelworxBaseUrl(data.base_url);
+      }
+    } catch {}
   };
 
   // Trigger manual sync with Hostinger online server
@@ -239,7 +278,49 @@ export default function AdminPortal({ onLogout } = {}) {
     }
   };
 
-  // Check database status on mount
+  // Save Relworx payment credentials
+  const handleSaveRelworx = async (e) => {
+    if (e) e.preventDefault();
+    setIsSavingRelworx(true);
+    setRelworxFeedback({ type: 'info', message: 'Saving Relworx credentials to persistent storage...' });
+    try {
+      const res = await saveRelworxConfig({
+        accountNo: relworxAccountNo,
+        apiKey: relworxApiKey,
+        webhookKey: relworxWebhookKey,
+        baseUrl: relworxBaseUrl
+      });
+      setRelworxFeedback({ type: 'success', message: res.message || 'Relworx gateway credentials saved successfully!' });
+      showToast('Relworx Payment credentials saved!');
+      await reloadRelworxStatus();
+    } catch (err) {
+      setRelworxFeedback({ type: 'error', message: err.message || 'Failed to save credentials.' });
+    } finally {
+      setIsSavingRelworx(false);
+    }
+  };
+
+  // Test connection to Relworx gateway
+  const handleTestRelworxConnection = async () => {
+    setIsTestingRelworx(true);
+    setRelworxFeedback({ type: 'info', message: 'Contacting Relworx API gateway servers...' });
+    try {
+      const res = await testRelworxConnection({
+        accountNo: relworxAccountNo,
+        apiKey: relworxApiKey,
+        baseUrl: relworxBaseUrl
+      });
+      setRelworxFeedback({ type: 'success', message: res.message || 'Connection successful! Relworx server is reachable and credentials validated.' });
+      showToast('Relworx connection validated!');
+      await reloadRelworxStatus();
+    } catch (err) {
+      setRelworxFeedback({ type: 'error', message: err.message || 'Relworx connection test failed.' });
+    } finally {
+      setIsTestingRelworx(false);
+    }
+  };
+
+  // Check database and Relworx status on mount
   useEffect(() => {
     fetch('/api/database/status')
       .then(res => res.json())
@@ -247,6 +328,7 @@ export default function AdminPortal({ onLogout } = {}) {
         if (data && data.status) setDbStatus(data);
       })
       .catch(() => {});
+    reloadRelworxStatus();
   }, []);
 
   // Save Hostinger MySQL configuration if entered by admin
@@ -2238,6 +2320,197 @@ export default function AdminPortal({ onLogout } = {}) {
                       </div>
                     </form>
                   )}
+                </div>
+              </div>
+
+              {/* Card 2.7: Relworx Mobile Money Gateway (Uganda) */}
+              <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6 w-full">
+                <div className="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-[#b38728] flex items-center justify-center shrink-0">
+                      <Smartphone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-serif font-bold text-base text-gray-900">Relworx Mobile Money Gateway</h3>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          relworxGatewayStatus.configured
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}>
+                          {relworxGatewayStatus.configured ? '● Configured & Ready' : '○ Enter API Key to Activate'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">Automated USSD push payments for MTN Mobile Money &amp; Airtel Money in Uganda</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleTestRelworxConnection}
+                      disabled={isTestingRelworx}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <RotateCcw className={`w-3.5 h-3.5 ${isTestingRelworx ? 'animate-spin' : ''}`} />
+                      <span>{isTestingRelworx ? 'Testing...' : 'Test Connection'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveRelworx}
+                      disabled={isSavingRelworx}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-black shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                      style={{ background: 'var(--gradient-gold-metallic)', border: '1px solid var(--color-gold-light)' }}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 stroke-[2.2]" />
+                      <span>{isSavingRelworx ? 'Saving...' : 'Save Credentials'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Relworx Status Overview Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-1">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Business Account No</p>
+                    <p className="font-mono font-bold text-sm text-gray-900">{relworxGatewayStatus.account_no || 'REL11AE925B85'}</p>
+                    <p className="text-[10px] text-[#b38728] font-medium">DAINTY STUDS &amp; CHAINS</p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-1">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">MTN Mobile Money Merchant</p>
+                    <p className="font-mono font-bold text-sm text-gray-900">+256 788 227027</p>
+                    <p className="text-[10px] text-emerald-600 font-medium">USSD PIN push enabled</p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-1">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Airtel Money Merchant</p>
+                    <p className="font-mono font-bold text-sm text-gray-900">+256 759 924291</p>
+                    <p className="text-[10px] text-emerald-600 font-medium">USSD PIN push enabled</p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-1">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">API Authentication</p>
+                    <p className="font-mono font-bold text-sm text-gray-900">
+                      {relworxGatewayStatus.masked_key || (relworxGatewayStatus.api_key_set ? 'Active Key' : 'Not Configured')}
+                    </p>
+                    <p className="text-[10px] text-gray-500 font-medium">Server-side secured (No VITE_ leak)</p>
+                  </div>
+                </div>
+
+                {/* Feedback Message */}
+                {relworxFeedback && (
+                  <div className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                    relworxFeedback.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : relworxFeedback.type === 'info'
+                      ? 'bg-blue-50 text-blue-800 border border-blue-200'
+                      : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  }`}>
+                    {relworxFeedback.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+                    <span>{relworxFeedback.message}</span>
+                  </div>
+                )}
+
+                {/* Configuration Input Fields */}
+                <form onSubmit={handleSaveRelworx} className="p-5 rounded-2xl bg-[#f8f9fd] border border-gray-200/80 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-1">
+                        Relworx Business Account Number <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={relworxAccountNo}
+                        onChange={(e) => setRelworxAccountNo(e.target.value)}
+                        placeholder="REL11AE925B85"
+                        className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono font-bold text-gray-800 outline-none focus:border-[#b38728]"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1">Found in your Relworx dashboard under Business Profile.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-1">
+                        Relworx API Key <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={relworxApiKey}
+                        onChange={(e) => setRelworxApiKey(e.target.value)}
+                        placeholder={relworxGatewayStatus.masked_key ? `Current: ${relworxGatewayStatus.masked_key} (Enter new key to change)` : 'relworx_live_... or API key'}
+                        className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-800 outline-none focus:border-[#b38728]"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1">Rotated API key from Relworx Developer Settings. Saved securely on the server.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-1">
+                        Webhook Authentication Key (Optional)
+                      </label>
+                      <input
+                        type="password"
+                        value={relworxWebhookKey}
+                        onChange={(e) => setRelworxWebhookKey(e.target.value)}
+                        placeholder="Webhook key from Relworx settings"
+                        className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-800 outline-none focus:border-[#b38728]"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1">Used to verify HMAC-SHA256 signatures on payment callbacks.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-800 mb-1">
+                        API Gateway Base URL
+                      </label>
+                      <input
+                        type="text"
+                        value={relworxBaseUrl}
+                        onChange={(e) => setRelworxBaseUrl(e.target.value)}
+                        placeholder="https://payments.relworx.com/api"
+                        className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-800 outline-none focus:border-[#b38728]"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1">Standard: https://payments.relworx.com/api</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-gray-200/60">
+                    <div className="text-[11px] text-gray-500">
+                      Webhook URL to register in Relworx: <code className="bg-white px-2 py-0.5 rounded border border-gray-200 font-mono text-gray-800">https://daintystudsandchains.com/api/relworx/webhook</code>
+                    </div>
+
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={handleTestRelworxConnection}
+                        disabled={isTestingRelworx}
+                        className="px-4 py-2 rounded-xl text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 cursor-pointer shadow-2xs"
+                      >
+                        {isTestingRelworx ? 'Testing...' : 'Test Connection'}
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSavingRelworx}
+                        className="px-5 py-2 rounded-xl text-xs font-bold text-black shadow-xs cursor-pointer"
+                        style={{ background: 'var(--gradient-gold-metallic)' }}
+                      >
+                        {isSavingRelworx ? 'Saving...' : 'Save & Persist Configuration'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                {/* Helpful Checkout Flow Guide */}
+                <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-200/60 space-y-2">
+                  <h4 className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-[#b38728]" />
+                    <span>How Customer Mobile Money Payments Work on daintystudsandchains.com</span>
+                  </h4>
+                  <ol className="text-[11px] text-amber-950/80 list-decimal list-inside space-y-1 leading-relaxed">
+                    <li>Customer adds jewelry to bag and clicks checkout (or initiates mobile money checkout).</li>
+                    <li>They select their operator (MTN or Airtel) and enter their phone number (e.g. 0788227027 or 0759924291).</li>
+                    <li>Relworx sends a real-time USSD push prompt directly to the customer's phone handset.</li>
+                    <li>Customer enters their Mobile Money PIN to authorize the payment in Ugandan Shillings (UGX).</li>
+                    <li>The checkout modal automatically polls and confirms success, permanently records the order in the database, and clears the cart.</li>
+                  </ol>
                 </div>
               </div>
 

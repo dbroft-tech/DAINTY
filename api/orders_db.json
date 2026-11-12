@@ -1,0 +1,28 @@
+[
+  {
+    "id": "ORD-MWDE9P06-RPVL",
+    "customer_name": "Customer",
+    "customer_email": "",
+    "customer_phone": "",
+    "delivery_address": "Kampala, Uganda",
+    "notes": "",
+    "payment_method": "Mobile Money (Relworx)",
+    "momo_phone": "",
+    "momo_network": "",
+    "relworx_reference": "",
+    "relworx_internal_reference": "",
+    "items": [
+      {
+        "id": "prod_1",
+        "name": "Dainty Necklace",
+        "quantity": 1,
+        "price": 50000
+      }
+    ],
+    "total_amount": 0,
+    "discount_applied": 0,
+    "coupon_code": "",
+    "status": "Paid",
+    "created_at": "2026-11-12T10:17:52.086Z"
+  }
+]

@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -14,24 +14,166 @@ const POSSIBLE_PERSISTENT_DIRS = [
   __dirname
 ].filter(Boolean);
 
-
-// Helper to read and write database with persistent mirroring
-function sanitizeImages(all) {
-  if (!Array.isArray(all)) return [];
-  return all.map(p => {
-    if (!p) return p;
-    if (Array.isArray(p.images)) {
-      p.images = p.images.map(img => {
-        if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://') || img.includes('unsplash.com'))) {
-          return '/images/vi.jpeg';
-        }
-        return img;
-      });
+function ensureDir(dir) {
+  try {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
     }
-    return p;
-  });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
+function getPaymentConfig() {
+  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
+    try {
+      if (existsSync(dir)) {
+        const target = resolve(dir, 'payment_config.json');
+        if (existsSync(target)) {
+          const content = readFileSync(target, 'utf-8');
+          return JSON.parse(content);
+        }
+      }
+    } catch {}
+  }
+  return {};
+}
+
+function savePaymentConfig(config) {
+  let saved = false;
+  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
+    try {
+      if (ensureDir(dir)) {
+        const target = resolve(dir, 'payment_config.json');
+        writeFileSync(target, JSON.stringify(config, null, 2), 'utf-8');
+        saved = true;
+      }
+    } catch {}
+  }
+  return saved;
+}
+
+function parseEnvString(content) {
+  const result = {};
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const idx = trimmed.indexOf('=');
+    if (idx !== -1) {
+      const key = trimmed.slice(0, idx).trim();
+      let val = trimmed.slice(idx + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      result[key] = val;
+    }
+  }
+  return result;
+}
+
+function getEnvFileCredentials() {
+  const possibleEnvFiles = [
+    resolve(__dirname, '../.env'),
+    resolve(__dirname, '.env'),
+    '/home/u111258626/domains/daintystudsandchains.com/dainty_data/.env'
+  ];
+  for (const p of possibleEnvFiles) {
+    try {
+      if (existsSync(p)) {
+        return parseEnvString(readFileSync(p, 'utf-8'));
+      }
+    } catch {}
+  }
+  return {};
+}
+
+function isCleanVal(val) {
+  if (!val || typeof val !== 'string') return '';
+  const trimmed = val.trim();
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.includes('replace_with') ||
+    lower.includes('your_relworx') ||
+    lower.includes('your-domain.example') ||
+    lower.includes('your_api_key') ||
+    lower.includes('your_account')
+  ) {
+    return '';
+  }
+  return trimmed;
+}
+
+function resolveRelworxCredentials(customEnv = {}) {
+  const fileConfig = getPaymentConfig();
+  const envFile = getEnvFileCredentials();
+
+  // Priority: 1. fileConfig (Admin dashboard save), 2. customEnv / process.env, 3. envFile, 4. default
+  const apiKey = (
+    isCleanVal(fileConfig.apiKey) ||
+    isCleanVal(fileConfig.RELWORX_API_KEY) ||
+    isCleanVal(customEnv.RELWORX_API_KEY) ||
+    isCleanVal(process.env.RELWORX_API_KEY) ||
+    isCleanVal(envFile.RELWORX_API_KEY) ||
+    ''
+  );
+
+  const accountNo = (
+    isCleanVal(fileConfig.accountNo) ||
+    isCleanVal(fileConfig.RELWORX_ACCOUNT_NO) ||
+    isCleanVal(customEnv.RELWORX_ACCOUNT_NO) ||
+    isCleanVal(process.env.RELWORX_ACCOUNT_NO) ||
+    isCleanVal(envFile.RELWORX_ACCOUNT_NO) ||
+    'REL11AE925B85'
+  );
+
+  const webhookKey = (
+    isCleanVal(fileConfig.webhookKey) ||
+    isCleanVal(fileConfig.RELWORX_WEBHOOK_KEY) ||
+    isCleanVal(customEnv.RELWORX_WEBHOOK_KEY) ||
+    isCleanVal(process.env.RELWORX_WEBHOOK_KEY) ||
+    isCleanVal(envFile.RELWORX_WEBHOOK_KEY) ||
+    '424a7fe74781e4ecdcb8dfcbdb'
+  );
+
+  const baseUrl = (
+    isCleanVal(fileConfig.baseUrl) ||
+    isCleanVal(fileConfig.RELWORX_BASE_URL) ||
+    isCleanVal(customEnv.RELWORX_BASE_URL) ||
+    isCleanVal(process.env.RELWORX_BASE_URL) ||
+    isCleanVal(envFile.RELWORX_BASE_URL) ||
+    'https://payments.relworx.com/api'
+  ).replace(/\/+$/, '');
+
+  const webhookUrl = (
+    isCleanVal(fileConfig.webhookUrl) ||
+    isCleanVal(fileConfig.RELWORX_WEBHOOK_URL) ||
+    isCleanVal(customEnv.RELWORX_WEBHOOK_URL) ||
+    isCleanVal(process.env.RELWORX_WEBHOOK_URL) ||
+    isCleanVal(envFile.RELWORX_WEBHOOK_URL) ||
+    'https://daintystudsandchains.com/api/relworx/webhook'
+  );
+
+  return { apiKey, accountNo, webhookKey, baseUrl, webhookUrl };
+}
+
+function getFilePath(filename) {
+  // First check if persistent directory already has the file
+  for (const dir of POSSIBLE_PERSISTENT_DIRS) {
+    try {
+      if (existsSync(dir)) {
+        const candidate = resolve(dir, filename);
+        if (existsSync(candidate)) return candidate;
+      }
+    } catch {}
+  }
+  return resolve(__dirname, filename);
+}
+
+const PRODUCTS_DB_PATH = getFilePath('products_db.json');
+const DELETED_IDS_PATH = getFilePath('deleted_ids.json');
+
+// Helper to read and write database with persistent mirroring
 function getDeletedIds() {
   for (const dir of POSSIBLE_PERSISTENT_DIRS) {
     try {
@@ -71,8 +213,7 @@ function getDbProducts() {
           const content = readFileSync(target, 'utf-8');
           const all = JSON.parse(content);
           if (Array.isArray(all)) {
-            const sanitized = sanitizeImages(all);
-            return sanitized.filter(p => p && p.id && !deletedSet.has(p.id));
+            return all.filter(p => p && p.id && !deletedSet.has(p.id));
           }
         }
       }
@@ -147,12 +288,12 @@ function validWebhook(req, data, { webhookKey, webhookUrl }) {
 }
 
 export async function handleApiRequest(req, res, customEnv = {}) {
-  const env = { ...process.env, ...customEnv };
-  const API_KEY = env.RELWORX_API_KEY;
-  const ACCOUNT_NO = env.RELWORX_ACCOUNT_NO;
-  const WEBHOOK_KEY = env.RELWORX_WEBHOOK_KEY;
-  const BASE_URL = (env.RELWORX_BASE_URL || 'https://payments.relworx.com/api').replace(/\/$/, '');
-  const WEBHOOK_URL = env.RELWORX_WEBHOOK_URL;
+  const credentials = resolveRelworxCredentials(customEnv);
+  const API_KEY = credentials.apiKey;
+  const ACCOUNT_NO = credentials.accountNo;
+  const WEBHOOK_KEY = credentials.webhookKey;
+  const BASE_URL = credentials.baseUrl;
+  const WEBHOOK_URL = credentials.webhookUrl;
 
   const url = new URL(req.url, 'http://localhost');
   const pathname = (url.pathname || '/').replace(/\/+$/, '') || '/';
@@ -201,11 +342,6 @@ export async function handleApiRequest(req, res, customEnv = {}) {
     // PRODUCTS DATABASE REST ENDPOINTS (GET, POST, PUT, DELETE, RESET)
     // =========================================================================
     
-    // GET /api/deleted-ids -> Retrieve all deleted product IDs for multi-device sync
-    if (req.method === 'GET' && (pathname === '/api/deleted-ids' || pathname === '/api/products/deleted-ids')) {
-      return send(res, 200, getDeletedIds());
-    }
-
     // GET /api/products -> Retrieve all stored products
     if (req.method === 'GET' && pathname === '/api/products') {
       const products = getDbProducts();
@@ -223,39 +359,10 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       return send(res, 404, { error: `Product ${productId} not found.` });
     }
 
-    // POST /api/products/delete -> Robust deletion via POST (avoids proxy/firewall method blocks)
-    if (req.method === 'POST' && (pathname === '/api/products/delete' || pathname === '/api/delete-product')) {
-      const payload = await readJson(req);
-      const productId = (payload?.id || payload?.productId || '').trim();
-      if (!productId) {
-        return send(res, 400, { error: 'Product ID required in JSON body.' });
-      }
-      const deletedIds = getDeletedIds();
-      if (!deletedIds.includes(productId)) {
-        deletedIds.push(productId);
-        saveDeletedIds(deletedIds);
-      }
-      const products = getDbProducts();
-      const filtered = products.filter(p => p.id !== productId);
-      saveDbProducts(filtered);
-      return send(res, 200, { success: true, deletedId: productId, count: filtered.length });
-    }
-
     // POST or PUT /api/products or /api/products/:id -> Create or update product
     if ((req.method === 'POST' || req.method === 'PUT') && (pathname === '/api/products' || pathname.startsWith('/api/products/'))) {
-      if (pathname === '/api/products/reset' || pathname === '/api/products/delete') {
-        // Fall through to specific handlers
-      } else if (pathname.endsWith('/delete')) {
-        const productId = pathname.replace('/api/products/', '').replace('/delete', '').trim();
-        const deletedIds = getDeletedIds();
-        if (productId && !deletedIds.includes(productId)) {
-          deletedIds.push(productId);
-          saveDeletedIds(deletedIds);
-        }
-        const products = getDbProducts();
-        const filtered = products.filter(p => p.id !== productId);
-        saveDbProducts(filtered);
-        return send(res, 200, { success: true, deletedId: productId, count: filtered.length });
+      if (pathname === '/api/products/reset') {
+        // Fall through to reset handler below
       } else {
         const product = await readJson(req);
         if (!product || (!product.name && !product.title)) {
@@ -323,11 +430,103 @@ export async function handleApiRequest(req, res, customEnv = {}) {
     // =========================================================================
     // PAYMENTS & RELWORX ENDPOINTS
     // =========================================================================
-    if (req.method === 'GET' && url.pathname === '/api/health') {
-      return send(res, 200, { ok: true, relworxConfigured: Boolean(API_KEY && ACCOUNT_NO) });
+    if (req.method === 'GET' && pathname === '/api/health') {
+      return send(res, 200, {
+        ok: true,
+        relworxConfigured: Boolean(API_KEY && ACCOUNT_NO),
+        account_no: ACCOUNT_NO || 'REL11AE925B85'
+      });
     }
 
-    if (req.method === 'POST' && url.pathname === '/api/relworx/webhook') {
+    // GET /api/relworx/status -> Check gateway configuration status
+    if (req.method === 'GET' && (pathname === '/api/relworx/status' || pathname === '/api/relworx/config')) {
+      const isConfigured = Boolean(API_KEY && ACCOUNT_NO);
+      return send(res, 200, {
+        configured: isConfigured,
+        account_no: ACCOUNT_NO || 'REL11AE925B85',
+        api_key_set: Boolean(API_KEY),
+        masked_key: API_KEY ? `${API_KEY.slice(0, 4)}••••••••${API_KEY.slice(-4)}` : null,
+        webhook_key_set: Boolean(WEBHOOK_KEY),
+        base_url: BASE_URL,
+        webhook_url: WEBHOOK_URL || 'https://daintystudsandchains.com/api/relworx/webhook',
+        merchant_mtn: '+256788227027',
+        merchant_airtel: '+256759924291',
+        supported_networks: ['MTN', 'AIRTEL'],
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // POST /api/relworx/config -> Save Relworx credentials to persistent storage
+    if (req.method === 'POST' && pathname === '/api/relworx/config') {
+      const body = await readJson(req);
+      const current = getPaymentConfig();
+      const updated = {
+        ...current,
+        accountNo: (body.accountNo || body.account_no || current.accountNo || 'REL11AE925B85').trim(),
+        apiKey: (body.apiKey !== undefined ? body.apiKey : (body.api_key !== undefined ? body.api_key : (current.apiKey || ''))).trim(),
+        webhookKey: (body.webhookKey !== undefined ? body.webhookKey : (body.webhook_key !== undefined ? body.webhook_key : (current.webhookKey || ''))).trim(),
+        baseUrl: (body.baseUrl || body.base_url || current.baseUrl || 'https://payments.relworx.com/api').trim(),
+        webhookUrl: (body.webhookUrl || body.webhook_url || current.webhookUrl || 'https://daintystudsandchains.com/api/relworx/webhook').trim(),
+        updated_at: new Date().toISOString()
+      };
+      savePaymentConfig(updated);
+      return send(res, 200, {
+        success: true,
+        message: 'Relworx payment credentials saved and persisted successfully.',
+        configured: Boolean(updated.apiKey && updated.accountNo),
+        account_no: updated.accountNo,
+        masked_key: updated.apiKey ? `${updated.apiKey.slice(0, 4)}••••••••${updated.apiKey.slice(-4)}` : null
+      });
+    }
+
+    // POST /api/relworx/test-connection -> Verify connection to Relworx API
+    if (req.method === 'POST' && pathname === '/api/relworx/test-connection') {
+      const body = await readJson(req);
+      const testKey = (body.apiKey || body.api_key || API_KEY || '').trim();
+      const testAccount = (body.accountNo || body.account_no || ACCOUNT_NO || 'REL11AE925B85').trim();
+      const testBase = (body.baseUrl || body.base_url || BASE_URL).trim();
+
+      if (!testKey) {
+        return send(res, 400, {
+          success: false,
+          error: 'Please enter a Relworx API Key to test connection.'
+        });
+      }
+
+      try {
+        const query = new URLSearchParams({ internal_reference: 'PING_TEST_REF', account_no: testAccount });
+        const response = await fetch(`${testBase}/mobile-money/check-request-status?${query}`, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/vnd.relworx.v2',
+            Authorization: `Bearer ${testKey}`,
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          return send(res, 401, {
+            success: false,
+            error: 'Authentication failed with Relworx. The API key is invalid or unauthorized.'
+          });
+        }
+
+        return send(res, 200, {
+          success: true,
+          message: 'Relworx payment server is connected and authenticated successfully!',
+          account_no: testAccount,
+          status: response.status
+        });
+      } catch (err) {
+        return send(res, 502, {
+          success: false,
+          error: `Could not reach Relworx server: ${err.message}`
+        });
+      }
+    }
+
+    // POST /api/relworx/webhook -> Relworx transaction callback webhook
+    if (req.method === 'POST' && pathname === '/api/relworx/webhook') {
       const data = await readJson(req);
       if (!validWebhook(req, data, { webhookKey: WEBHOOK_KEY, webhookUrl: WEBHOOK_URL })) {
         return send(res, 401, { error: 'Invalid webhook signature or webhook URL configuration.' });
@@ -336,7 +535,8 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       return send(res, 200, { received: true });
     }
 
-    if (url.pathname === '/api/relworx/mobile-money/request-payment' && req.method === 'POST') {
+    // POST /api/relworx/mobile-money/request-payment -> Initiate USSD prompt to customer
+    if (req.method === 'POST' && pathname === '/api/relworx/mobile-money/request-payment') {
       const data = await readJson(req);
       const { msisdn, amount, reference, description } = data;
       if (!/^\+256\d{9}$/.test(msisdn || '') || !Number.isFinite(Number(amount)) || Number(amount) < 500 || Number(amount) > 5_000_000 || !/^[A-Za-z0-9]{8,36}$/.test(reference || '')) {
@@ -352,7 +552,8 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       return send(res, 200, result);
     }
 
-    if (req.method === 'GET' && url.pathname === '/api/relworx/mobile-money/check-request-status') {
+    // GET /api/relworx/mobile-money/check-request-status -> Check payment status polling
+    if (req.method === 'GET' && pathname === '/api/relworx/mobile-money/check-request-status') {
       const internalReference = url.searchParams.get('internal_reference');
       if (!internalReference || !/^[A-Za-z0-9-]+$/.test(internalReference)) {
         return send(res, 400, { error: 'Invalid internal reference.' });
@@ -363,7 +564,8 @@ export async function handleApiRequest(req, res, customEnv = {}) {
       return send(res, 200, result);
     }
 
-    if (url.pathname === '/api/relworx/mobile-money/validate-mobile-number' && req.method === 'POST') {
+    // POST /api/relworx/mobile-money/validate-mobile-number -> Validate Ugandan phone number
+    if (req.method === 'POST' && pathname === '/api/relworx/mobile-money/validate-mobile-number') {
       const { msisdn } = await readJson(req);
       if (!/^\+256\d{9}$/.test(msisdn || '')) return send(res, 400, { error: 'Invalid Uganda mobile number.' });
       const result = await callRelworx('/mobile-money/validate-mobile-number', 'POST', { msisdn }, { apiKey: API_KEY, accountNo: ACCOUNT_NO, baseUrl: BASE_URL });

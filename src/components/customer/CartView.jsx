@@ -11,7 +11,7 @@ import {
   processFullPayment,
   detectMobileNetwork,
   generateOrderReference,
-  isRelworxConfigured,
+  getRelworxStatus,
   getMerchantNumber,
 } from '../../services/relworxPayments';
 
@@ -22,7 +22,7 @@ const AIRTEL_LOGO = '/airtel_logo.png';
 // ─────────────────────────────────────────────────────────────
 // Payment Status Modal
 // ─────────────────────────────────────────────────────────────
-function PaymentStatusModal({ status, pollAttempt, maxPolls, phone, network, onClose, onRetry }) {
+function PaymentStatusModal({ status, pollAttempt, maxPolls, phone, network, errorMessage, onClose, onRetry, onWhatsAppCheckout }) {
   const progressPct = status === 'polling' ? Math.min(100, (pollAttempt / maxPolls) * 100) : 100;
   const isMTN = network === 'MTN';
 
@@ -30,32 +30,32 @@ function PaymentStatusModal({ status, pollAttempt, maxPolls, phone, network, onC
     polling: {
       icon: <Loader2 size={34} style={{ color: '#c59b27', animation: 'spin 1.2s linear infinite' }} />,
       title: 'Waiting for Payment…',
-      subtitle: `A USSD prompt was sent to ${phone}. Check your phone and approve the payment.`,
+      subtitle: `A USSD prompt was sent to ${phone}. Check your phone screen and enter your Mobile Money PIN to approve.`,
       color: '#c59b27', bg: 'rgba(197,155,39,0.08)',
     },
     successful: {
       icon: <CheckCircle2 size={34} style={{ color: '#16a34a' }} />,
       title: 'Payment Confirmed! 🎉',
-      subtitle: 'Your mobile money payment was received. Your order is now being processed.',
+      subtitle: 'Your mobile money payment was received successfully. Your order is now confirmed.',
       color: '#16a34a', bg: 'rgba(22,163,74,0.08)',
     },
     failed: {
       icon: <XCircle size={34} style={{ color: '#dc2626' }} />,
       title: 'Payment Failed',
-      subtitle: 'The payment could not be processed. Check your balance and try again.',
+      subtitle: errorMessage || 'The payment could not be processed. Please check your wallet balance and try again.',
       color: '#dc2626', bg: 'rgba(220,38,38,0.08)',
     },
     timeout: {
       icon: <Clock size={34} style={{ color: '#d97706' }} />,
       title: 'Payment Timed Out',
-      subtitle: 'No approval received within 60 seconds. You may retry or checkout via WhatsApp.',
+      subtitle: 'No PIN authorization received within 60 seconds. You may retry or checkout instantly via WhatsApp.',
       color: '#d97706', bg: 'rgba(217,119,6,0.08)',
     },
     not_configured: {
-      icon: <AlertTriangle size={34} style={{ color: '#7c3aed' }} />,
-      title: 'Relworx Not Configured',
-      subtitle: 'Add your Relworx API key and Account Number to the .env file to enable live payments.',
-      color: '#7c3aed', bg: 'rgba(124,58,237,0.08)',
+      icon: <AlertTriangle size={34} style={{ color: '#b38728' }} />,
+      title: 'Relworx Gateway Setup Required',
+      subtitle: errorMessage || 'Relworx payment credentials need to be configured in the Admin Portal under Settings or in your Hostinger server environment.',
+      color: '#b38728', bg: 'rgba(197,155,39,0.12)',
     },
   };
 
@@ -126,24 +126,24 @@ function PaymentStatusModal({ status, pollAttempt, maxPolls, phone, network, onC
               <RefreshCw size={15} /> Try Again
             </button>
           )}
+          {status !== 'polling' && onWhatsAppCheckout && (
+            <button onClick={onWhatsAppCheckout} style={{
+              background: '#25D366', color: '#fff', border: 'none',
+              borderRadius: '10px', padding: '0.75rem 1.5rem', cursor: 'pointer',
+              fontSize: '0.85rem', fontWeight: 700,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+            }}>
+              <MessageSquareText size={16} /> Complete Order via WhatsApp
+            </button>
+          )}
           {status !== 'polling' && onClose && (
             <button onClick={onClose} style={{
               background: '#f7f5f2', color: '#44403c', border: '1px solid #e7e5e0',
               borderRadius: '10px', padding: '0.7rem 1.5rem', cursor: 'pointer',
               fontSize: '0.82rem', fontWeight: 600,
             }}>
-              {status === 'successful' ? 'View My Order' : 'Close'}
+              {status === 'successful' ? 'View My Order' : 'Cancel'}
             </button>
-          )}
-          {status === 'not_configured' && (
-            <a href="https://payments.relworx.com/users/sign_up" target="_blank" rel="noopener noreferrer"
-              style={{
-                background: 'linear-gradient(135deg,#c59b27,#ddb340)', color: '#000',
-                borderRadius: '10px', padding: '0.75rem 1.5rem', textDecoration: 'none',
-                fontSize: '0.85rem', fontWeight: 700, display: 'block',
-              }}>
-              Set Up Relworx Account →
-            </a>
           )}
         </div>
       </div>
@@ -163,12 +163,23 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
   const [couponCode, setCouponCode]     = useState('');
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [paymentError, setPaymentError]   = useState('');
+  const [relworxServerConfigured, setRelworxServerConfigured] = useState(true);
   const [pollAttempt, setPollAttempt]     = useState(0);
   const [loading, setLoading]             = useState(false);
   const [orderPlaced, setOrderPlaced]     = useState(null);
   const [secureSave, setSecureSave]       = useState(true);
   const MAX_POLLS = 12;
   const abortRef  = useRef(false);
+
+  // Check Relworx configuration on mount
+  useEffect(() => {
+    getRelworxStatus().then(status => {
+      if (status && status.configured !== undefined) {
+        setRelworxServerConfigured(status.configured);
+      }
+    }).catch(() => {});
+  }, []);
 
   // When billing phone is filled, pre-fill the momo phone
   useEffect(() => {
@@ -191,7 +202,7 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
   };
 
   const handleApplyCoupon = (code, pct) => { setCouponCode(code); setDiscountPercentage(pct); };
-  const resetModal = () => { setPaymentStatus(null); setPollAttempt(0); setLoading(false); abortRef.current = false; };
+  const resetModal = () => { setPaymentStatus(null); setPaymentError(''); setPollAttempt(0); setLoading(false); abortRef.current = false; };
 
   // ── WhatsApp fallback ────────────────────────────────────
   const handleWhatsAppCheckout = () => {
@@ -226,11 +237,10 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
       return;
     }
 
-    if (!isRelworxConfigured()) { setPaymentStatus('not_configured'); return; }
-
     abortRef.current = false;
     setLoading(true);
     setPaymentStatus('polling');
+    setPaymentError('');
     setPollAttempt(0);
 
     const orderRef = generateOrderReference();
@@ -267,11 +277,16 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
         });
         onClearCart();
         setOrderPlaced(newOrder);
+      } else if (result.status === 'failed') {
+        setPaymentError(result.message || 'Payment was declined or cancelled on your handset.');
       }
     } catch (err) {
       if (abortRef.current) return;
       console.error('[Relworx]', err);
-      setPaymentStatus(err.message?.includes('not configured') ? 'not_configured' : 'failed');
+      const msg = err.message || 'Payment initiation failed.';
+      setPaymentError(msg);
+      const isConfigIssue = msg.toLowerCase().includes('not configured') || msg.toLowerCase().includes('credentials') || msg.toLowerCase().includes('api key');
+      setPaymentStatus(isConfigIssue ? 'not_configured' : 'failed');
     } finally {
       if (!abortRef.current) setLoading(false);
     }
@@ -470,8 +485,10 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
           maxPolls={MAX_POLLS}
           phone={momoPhone || checkoutData.phone}
           network={selectedNetwork}
+          errorMessage={paymentError}
           onClose={() => { abortRef.current = true; resetModal(); }}
           onRetry={resetModal}
+          onWhatsAppCheckout={handleWhatsAppCheckout}
         />
       )}
 
@@ -807,24 +824,18 @@ export default function CartView({ cart, _onUpdateQty, _onRemoveItem, onClearCar
                   </label>
                 </div>
 
-                {/* Not-configured warning */}
-                {!isRelworxConfigured() && (
+                {/* Server configuration notice if credentials are not detected */}
+                {!relworxServerConfigured && (
                   <div style={{
-                    marginTop: '1.2rem', padding: '0.8rem 1rem',
-                    background: 'rgba(124,58,237,0.06)', border: '1.5px solid rgba(124,58,237,0.25)',
-                    borderRadius: '10px', fontSize: '0.78rem', color: '#5b21b6',
+                    marginTop: '1.2rem', padding: '0.85rem 1rem',
+                    background: 'rgba(197,155,39,0.08)', border: '1.5px solid rgba(197,155,39,0.3)',
+                    borderRadius: '10px', fontSize: '0.78rem', color: '#7a5a00',
                     display: 'flex', alignItems: 'flex-start', gap: '0.5rem',
                   }}>
-                    <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+                    <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: '0.1rem', color: '#b38728' }} />
                     <div>
-                      <strong>Relworx API not configured.</strong>{' '}
-                      Add your{' '}
-                      <code style={{ background: 'rgba(124,58,237,0.1)', padding: '1px 4px', borderRadius: '3px' }}>VITE_RELWORX_API_KEY</code>{' '}
-                      and{' '}
-                      <code style={{ background: 'rgba(124,58,237,0.1)', padding: '1px 4px', borderRadius: '3px' }}>VITE_RELWORX_ACCOUNT_NO</code>{' '}
-                      to <code>.env</code>.{' '}
-                      <a href="https://payments.relworx.com/users/sign_up" target="_blank" rel="noopener noreferrer"
-                        style={{ color: '#7c3aed', fontWeight: 700 }}>Sign up at Relworx →</a>
+                      <strong>Relworx Payment Setup:</strong>{' '}
+                      Relworx gateway credentials can be set in the Admin Dashboard under Settings or in your Hostinger environment. You can also complete transactions directly via WhatsApp below.
                     </div>
                   </div>
                 )}

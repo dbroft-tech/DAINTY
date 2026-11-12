@@ -9,6 +9,13 @@ import { resolve, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleApiRequest } from './api/handler.js';
 
+// Auto-load .env in Node.js 22
+if (typeof process.loadEnvFile === 'function') {
+  try { process.loadEnvFile('.env'); } catch {}
+  try { process.loadEnvFile(resolve(process.cwd(), '.env')); } catch {}
+  try { process.loadEnvFile('/home/u111258626/domains/daintystudsandchains.com/dainty_data/.env'); } catch {}
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = resolve(__filename, '..');
 const DIST_DIR = resolve(__dirname, 'dist');

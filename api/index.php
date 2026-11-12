@@ -108,19 +108,15 @@ $id = $_GET['id'] ?? '';
 // Fallback path parsing
 if (empty($endpoint)) {
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    if (preg_match('#/api/products/([^/]+)#', $uri, $matches)) {
-        $endpoint = 'products';
-        $id = $matches[1];
-    } elseif (strpos($uri, '/api/products/reset') !== false) {
-        $endpoint = 'reset';
-    } elseif (strpos($uri, '/api/products') !== false) {
-        $endpoint = 'products';
-    } elseif (strpos($uri, '/api/database/config') !== false) {
-        $endpoint = 'db_config';
-    } elseif (strpos($uri, '/api/database/status') !== false) {
-        $endpoint = 'db_status';
+    if (strpos($uri, '/api/') !== false) {
+        $endpoint = preg_replace('#^.*?/api/#', '', $uri);
+        $endpoint = trim($endpoint, '/');
+        if (preg_match('#^products/([^/]+)$#', $endpoint, $matches) && $matches[1] !== 'reset') {
+            $id = $matches[1];
+        }
     }
 }
+$endpoint = trim($endpoint, '/');
 
 $rawInput = file_get_contents('php://input');
 $body = json_decode($rawInput, true);
@@ -218,56 +214,6 @@ if (($endpoint === 'db_config' || $endpoint === 'database/config') && $method ==
             'error' => 'Connection failed: ' . $e->getMessage()
         ]);
     }
-    exit;
-}
-
-// -----------------------------------------------------------------------------
-// ROUTE: GET Deleted IDs (Cross-Device Blacklist Sync)
-// -----------------------------------------------------------------------------
-if (($endpoint === 'deleted_ids' || $endpoint === 'deleted-ids') && $method === 'GET') {
-    if ($pdo) {
-        $stmt = $pdo->query("SELECT id FROM dainty_deleted_ids");
-        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
-        echo json_encode(array_values(array_unique($ids)));
-    } else {
-        $deleted = getFileDeletedIds($deletedIdsFile);
-        echo json_encode(array_values(array_unique($deleted)));
-    }
-    exit;
-}
-
-// -----------------------------------------------------------------------------
-// ROUTE: POST Delete Product (Fallback to avoid HTTP DELETE method blocks)
-// -----------------------------------------------------------------------------
-if (($endpoint === 'products_delete' || $endpoint === 'products/delete') && $method === 'POST') {
-    $delId = trim($body['id'] ?? $body['productId'] ?? $id);
-    if (empty($delId)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Product ID is required for deletion.']);
-        exit;
-    }
-    if ($pdo) {
-        $insDel = $pdo->prepare("INSERT IGNORE INTO dainty_deleted_ids (id) VALUES (:id)");
-        $insDel->execute([':id' => $delId]);
-        $delStmt = $pdo->prepare("DELETE FROM dainty_products WHERE id = :id");
-        $delStmt->execute([':id' => $delId]);
-    } else {
-        $deleted = getFileDeletedIds($deletedIdsFile);
-        if (!in_array($delId, $deleted)) {
-            $deleted[] = $delId;
-            saveFileDeletedIds($deletedIdsFile, $deleted);
-        }
-        $all = getFileProducts($productsDbFile, $deletedIdsFile);
-        $filtered = array_values(array_filter($all, function($p) use ($delId) {
-            return ($p['id'] ?? '') !== $delId;
-        }));
-        saveFileProducts($productsDbFile, $filtered);
-    }
-    echo json_encode([
-        'success' => true,
-        'deletedId' => $delId,
-        'message' => "Product {$delId} permanently deleted."
-    ]);
     exit;
 }
 
@@ -429,6 +375,260 @@ if ($endpoint === 'reset' && $method === 'POST') {
     exit;
 }
 
-// 404 Fallback
+// =============================================================================
+// RELWORX MOBILE MONEY GATEWAY (PHP Implementation for Hostinger Apache/LiteSpeed)
+// =============================================================================
+function getRelworxPhpConfig() {
+    $apiKey = getenv('RELWORX_API_KEY') ?: ($_ENV['RELWORX_API_KEY'] ?? '');
+    $accountNo = getenv('RELWORX_ACCOUNT_NO') ?: ($_ENV['RELWORX_ACCOUNT_NO'] ?? 'REL11AE925B85');
+    $webhookKey = getenv('RELWORX_WEBHOOK_KEY') ?: ($_ENV['RELWORX_WEBHOOK_KEY'] ?? '424a7fe74781e4ecdcb8dfcbdb');
+    $baseUrl = getenv('RELWORX_BASE_URL') ?: ($_ENV['RELWORX_BASE_URL'] ?? 'https://payments.relworx.com/api');
+    $webhookUrl = getenv('RELWORX_WEBHOOK_URL') ?: ($_ENV['RELWORX_WEBHOOK_URL'] ?? 'https://daintystudsandchains.com/api/relworx/webhook');
+
+    $possibleFiles = [
+        __DIR__ . '/payment_config.json',
+        __DIR__ . '/../data/payment_config.json',
+        '/home/u111258626/domains/daintystudsandchains.com/dainty_data/payment_config.json'
+    ];
+    foreach ($possibleFiles as $f) {
+        if (file_exists($f)) {
+            $cfg = json_decode(file_get_contents($f), true);
+            if (is_array($cfg)) {
+                if (!empty($cfg['apiKey'])) $apiKey = $cfg['apiKey'];
+                if (!empty($cfg['accountNo'])) $accountNo = $cfg['accountNo'];
+                if (!empty($cfg['webhookKey'])) $webhookKey = $cfg['webhookKey'];
+                if (!empty($cfg['baseUrl'])) $baseUrl = $cfg['baseUrl'];
+                if (!empty($cfg['webhookUrl'])) $webhookUrl = $cfg['webhookUrl'];
+                break;
+            }
+        }
+    }
+
+    return [
+        'apiKey' => trim((string)$apiKey),
+        'accountNo' => trim((string)$accountNo ?: 'REL11AE925B85'),
+        'webhookKey' => trim((string)$webhookKey),
+        'baseUrl' => rtrim(trim((string)$baseUrl ?: 'https://payments.relworx.com/api'), '/'),
+        'webhookUrl' => trim((string)$webhookUrl ?: 'https://daintystudsandchains.com/api/relworx/webhook')
+    ];
+}
+
+function callRelworxCurl($path, $method = 'GET', $payload = null, $cfg = []) {
+    if (empty($cfg['apiKey']) || empty($cfg['accountNo'])) {
+        http_response_code(400);
+        return ['error' => 'Relworx server credentials are not configured. Set RELWORX_API_KEY and RELWORX_ACCOUNT_NO.'];
+    }
+
+    $url = $cfg['baseUrl'] . $path;
+    $ch = curl_init($url);
+    $headers = [
+        'Accept: application/vnd.relworx.v2',
+        'Authorization: Bearer ' . $cfg['apiKey'],
+        'Content-Type: application/json'
+    ];
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+
+    if ($method === 'POST') {
+        curl_setopt($ch, CURLOPT_POST, true);
+        if ($payload !== null) {
+            $payload['account_no'] = $cfg['accountNo'];
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        }
+    } elseif ($method !== 'GET') {
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+    }
+
+    $raw = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err = curl_error($ch);
+    curl_close($ch);
+
+    if ($err) {
+        http_response_code(502);
+        return ['error' => 'Connection to Relworx failed: ' . $err];
+    }
+
+    $json = json_decode($raw, true);
+    if (!is_array($json)) {
+        http_response_code($status ?: 502);
+        return ['error' => 'Invalid response from Relworx (HTTP ' . $status . ')', 'raw' => substr((string)$raw, 0, 150)];
+    }
+
+    if ($status >= 400) {
+        http_response_code($status);
+    }
+
+    return $json;
+}
+
+// ROUTE: /api/health
+if ($endpoint === 'health' && $method === 'GET') {
+    $cfg = getRelworxPhpConfig();
+    echo json_encode([
+        'ok' => true,
+        'relworxConfigured' => !empty($cfg['apiKey']) && !empty($cfg['accountNo']),
+        'account_no' => $cfg['accountNo']
+    ]);
+    exit;
+}
+
+// ROUTE: GET /api/relworx/status or /api/relworx/config
+if (($endpoint === 'relworx/status' || $endpoint === 'relworx/config') && $method === 'GET') {
+    $cfg = getRelworxPhpConfig();
+    $key = $cfg['apiKey'];
+    $isConfigured = !empty($key) && !empty($cfg['accountNo']);
+    echo json_encode([
+        'configured' => $isConfigured,
+        'account_no' => $cfg['accountNo'],
+        'api_key_set' => !empty($key),
+        'masked_key' => !empty($key) ? substr($key, 0, 4) . '••••••••' . substr($key, -4) : null,
+        'webhook_key_set' => !empty($cfg['webhookKey']),
+        'base_url' => $cfg['baseUrl'],
+        'webhook_url' => $cfg['webhookUrl'],
+        'merchant_mtn' => '+256788227027',
+        'merchant_airtel' => '+256759924291',
+        'supported_networks' => ['MTN', 'AIRTEL'],
+        'timestamp' => gmdate('Y-m-d\TH:i:s\Z')
+    ]);
+    exit;
+}
+
+// ROUTE: POST /api/relworx/config -> Save configuration
+if ($endpoint === 'relworx/config' && $method === 'POST') {
+    $cfg = getRelworxPhpConfig();
+    $updated = [
+        'accountNo' => !empty($body['accountNo']) ? trim($body['accountNo']) : $cfg['accountNo'],
+        'apiKey' => isset($body['apiKey']) ? trim($body['apiKey']) : $cfg['apiKey'],
+        'webhookKey' => isset($body['webhookKey']) ? trim($body['webhookKey']) : $cfg['webhookKey'],
+        'baseUrl' => !empty($body['baseUrl']) ? trim($body['baseUrl']) : $cfg['baseUrl'],
+        'webhookUrl' => !empty($body['webhookUrl']) ? trim($body['webhookUrl']) : $cfg['webhookUrl'],
+        'updated_at' => gmdate('Y-m-d\TH:i:s\Z')
+    ];
+    $targetFile = __DIR__ . '/payment_config.json';
+    file_put_contents($targetFile, json_encode($updated, JSON_PRETTY_PRINT), LOCK_EX);
+
+    $key = $updated['apiKey'];
+    echo json_encode([
+        'success' => true,
+        'message' => 'Relworx payment credentials saved and persisted successfully.',
+        'configured' => !empty($key) && !empty($updated['accountNo']),
+        'account_no' => $updated['accountNo'],
+        'masked_key' => !empty($key) ? substr($key, 0, 4) . '••••••••' . substr($key, -4) : null
+    ]);
+    exit;
+}
+
+// ROUTE: POST /api/relworx/test-connection -> Ping Relworx
+if ($endpoint === 'relworx/test-connection' && $method === 'POST') {
+    $cfg = getRelworxPhpConfig();
+    $testKey = !empty($body['apiKey']) ? trim($body['apiKey']) : $cfg['apiKey'];
+    $testAccount = !empty($body['accountNo']) ? trim($body['accountNo']) : $cfg['accountNo'];
+    $testBase = !empty($body['baseUrl']) ? trim($body['baseUrl']) : $cfg['baseUrl'];
+
+    if (empty($testKey)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Please enter a Relworx API Key to test connection.']);
+        exit;
+    }
+
+    $ch = curl_init($testBase . '/mobile-money/check-request-status?internal_reference=PING_TEST&account_no=' . urlencode($testAccount));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Accept: application/vnd.relworx.v2',
+        'Authorization: Bearer ' . $testKey,
+        'Content-Type: application/json'
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    $raw = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err = curl_error($ch);
+    curl_close($ch);
+
+    if ($err) {
+        http_response_code(502);
+        echo json_encode(['success' => false, 'error' => 'Could not reach Relworx servers: ' . $err]);
+        exit;
+    }
+
+    if ($status === 401 || $status === 403) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Authentication failed with Relworx. The API key is invalid or unauthorized.']);
+        exit;
+    }
+
+    echo json_encode([
+        'success' => true,
+        'message' => 'Relworx payment server is connected and authenticated successfully!',
+        'account_no' => $testAccount,
+        'status' => $status
+    ]);
+    exit;
+}
+
+// ROUTE: POST /api/relworx/mobile-money/request-payment -> Initiate USSD push
+if ($endpoint === 'relworx/mobile-money/request-payment' && $method === 'POST') {
+    $cfg = getRelworxPhpConfig();
+    $msisdn = $body['msisdn'] ?? '';
+    $amount = (float)($body['amount'] ?? 0);
+    $reference = $body['reference'] ?? '';
+    $description = $body['description'] ?? "DAINTY Order {$reference}";
+
+    if (!preg_match('/^\+256\d{9}$/', $msisdn) || $amount < 500 || $amount > 5000000 || !preg_match('/^[A-Za-z0-9]{8,36}$/', $reference)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid phone, amount, or payment reference.']);
+        exit;
+    }
+
+    $result = callRelworxCurl('/mobile-money/request-payment', 'POST', [
+        'msisdn' => $msisdn,
+        'amount' => $amount,
+        'reference' => $reference,
+        'currency' => 'UGX',
+        'description' => substr($description, 0, 100)
+    ], $cfg);
+
+    echo json_encode($result);
+    exit;
+}
+
+// ROUTE: GET /api/relworx/mobile-money/check-request-status -> Check payment status polling
+if ($endpoint === 'relworx/mobile-money/check-request-status' && $method === 'GET') {
+    $cfg = getRelworxPhpConfig();
+    $internalRef = $_GET['internal_reference'] ?? '';
+    if (empty($internalRef) || !preg_match('/^[A-Za-z0-9\-]+$/', $internalRef)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid internal reference.']);
+        exit;
+    }
+
+    $path = '/mobile-money/check-request-status?internal_reference=' . urlencode($internalRef) . '&account_no=' . urlencode($cfg['accountNo']);
+    $result = callRelworxCurl($path, 'GET', null, $cfg);
+    if (isset($result['status']) && strtolower($result['status']) === 'success') {
+        $result['status'] = 'successful';
+    }
+    echo json_encode($result);
+    exit;
+}
+
+// ROUTE: POST /api/relworx/mobile-money/validate-mobile-number
+if ($endpoint === 'relworx/mobile-money/validate-mobile-number' && $method === 'POST') {
+    $cfg = getRelworxPhpConfig();
+    $msisdn = $body['msisdn'] ?? '';
+    if (!preg_match('/^\+256\d{9}$/', $msisdn)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid Uganda mobile number.']);
+        exit;
+    }
+
+    $result = callRelworxCurl('/mobile-money/validate-mobile-number', 'POST', ['msisdn' => $msisdn], $cfg);
+    echo json_encode($result);
+    exit;
+}
+
+// 404 Fallback for unhandled API routes
 http_response_code(404);
 echo json_encode(['error' => 'API route not found.']);
