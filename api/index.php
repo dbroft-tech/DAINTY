@@ -481,12 +481,15 @@ if (($endpoint === 'relworx/status' || $endpoint === 'relworx/config') && $metho
     $cfg = getRelworxPhpConfig();
     $key = $cfg['apiKey'];
     $isConfigured = !empty($key) && !empty($cfg['accountNo']);
+    $serverIp = $_SERVER['SERVER_ADDR'] ?? '151.106.96.51';
+    if (!empty($_SERVER['LOCAL_ADDR'])) $serverIp = $_SERVER['LOCAL_ADDR'];
     echo json_encode([
         'configured' => $isConfigured,
         'account_no' => $cfg['accountNo'],
         'api_key_set' => !empty($key),
         'masked_key' => !empty($key) ? substr($key, 0, 4) . '••••••••' . substr($key, -4) : null,
         'webhook_key_set' => !empty($cfg['webhookKey']),
+        'server_ip' => $serverIp,
         'base_url' => $cfg['baseUrl'],
         'webhook_url' => $cfg['webhookUrl'],
         'merchant_mtn' => '+256788227027',

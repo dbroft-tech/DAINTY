@@ -118,6 +118,26 @@ function PaymentStatusModal({ status, pollAttempt, maxPolls, phone, network, err
           </div>
         )}
 
+        {/* Actionable guidance if server IP is not whitelisted in Relworx */}
+        {errorMessage && errorMessage.toLowerCase().includes('authorized ip access') && (
+          <div style={{
+            background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px',
+            padding: '0.85rem 1rem', textAlign: 'left', marginBottom: '1.3rem',
+            fontSize: '0.78rem', color: '#1e40af', lineHeight: '1.55'
+          }}>
+            <strong style={{ display: 'block', marginBottom: '0.35rem', color: '#1e3a8a', fontSize: '0.82rem' }}>
+              How to fix "No Authorized IP Access" in Relworx:
+            </strong>
+            <ol style={{ paddingLeft: '1.2rem', margin: 0 }}>
+              <li>Log into <strong>payments.relworx.com</strong></li>
+              <li>Go to <strong>Organizations &rarr; Business Accounts &rarr; REL11AE925B85</strong></li>
+              <li>Click <strong>Edit Business Account</strong></li>
+              <li>In the <strong>API Authorized IPs</strong> field, enter: <code style={{ background: '#fff', padding: '1px 5px', borderRadius: '4px', border: '1px solid #bfdbfe', fontWeight: 700 }}>151.106.96.51</code></li>
+              <li>Click <strong>Update</strong> to save, then click Try Again</li>
+            </ol>
+          </div>
+        )}
+
         {/* Progress bar during polling */}
         {status === 'polling' && (
           <div style={{ marginBottom: '1.4rem' }}>

@@ -39,7 +39,8 @@ import {
   Package,
   Coins,
   Smartphone,
-  ShieldCheck
+  ShieldCheck,
+  Globe
 } from 'lucide-react';
 import {
   LineChart,
@@ -2410,6 +2411,35 @@ export default function AdminPortal({ onLogout } = {}) {
                     <span>{relworxFeedback.message}</span>
                   </div>
                 )}
+
+                {/* Server IP Whitelist Callout for Relworx "No Authorized IP Access" */}
+                <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200/90 text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                  <div>
+                    <h4 className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span>Hostinger / Server Outbound IP Address</span>
+                    </h4>
+                    <p className="text-[11px] text-blue-800/80 mt-0.5 leading-relaxed">
+                      Add this IP to <strong>API Authorized IPs</strong> in your Relworx dashboard to fix &quot;No Authorized IP Access&quot;.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <code className="px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-mono font-bold text-blue-950 select-all">
+                      {relworxGatewayStatus.server_ip || '151.106.96.51'}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ipToCopy = relworxGatewayStatus.server_ip || '151.106.96.51';
+                        navigator.clipboard?.writeText(ipToCopy);
+                        showToast(`Server IP ${ipToCopy} copied to clipboard!`);
+                      }}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                    >
+                      Copy IP
+                    </button>
+                  </div>
+                </div>
 
                 {/* Configuration Input Fields */}
                 <form onSubmit={handleSaveRelworx} className="p-5 rounded-2xl bg-[#f8f9fd] border border-gray-200/80 space-y-4">

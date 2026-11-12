@@ -157,6 +157,27 @@ function resolveRelworxCredentials(customEnv = {}) {
   return { apiKey, accountNo, webhookKey, baseUrl, webhookUrl };
 }
 
+let cachedServerIp = null;
+let lastIpCheck = 0;
+async function getServerIp() {
+  if (cachedServerIp && (Date.now() - lastIpCheck < 300_000)) return cachedServerIp;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.ip) {
+        cachedServerIp = data.ip;
+        lastIpCheck = Date.now();
+        return cachedServerIp;
+      }
+    }
+  } catch {}
+  return cachedServerIp || '151.106.96.51';
+}
+
 function getFilePath(filename) {
   // First check if persistent directory already has the file
   for (const dir of POSSIBLE_PERSISTENT_DIRS) {
@@ -441,12 +462,14 @@ export async function handleApiRequest(req, res, customEnv = {}) {
     // GET /api/relworx/status -> Check gateway configuration status
     if (req.method === 'GET' && (pathname === '/api/relworx/status' || pathname === '/api/relworx/config')) {
       const isConfigured = Boolean(API_KEY && ACCOUNT_NO);
+      const serverIp = await getServerIp();
       return send(res, 200, {
         configured: isConfigured,
         account_no: ACCOUNT_NO || 'REL11AE925B85',
         api_key_set: Boolean(API_KEY),
         masked_key: API_KEY ? `${API_KEY.slice(0, 4)}••••••••${API_KEY.slice(-4)}` : null,
         webhook_key_set: Boolean(WEBHOOK_KEY),
+        server_ip: serverIp,
         base_url: BASE_URL,
         webhook_url: WEBHOOK_URL || 'https://daintystudsandchains.com/api/relworx/webhook',
         merchant_mtn: '+256788227027',
